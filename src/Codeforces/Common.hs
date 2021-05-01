@@ -1,7 +1,7 @@
 --------------------------------------------------------------------------------
 
 module Codeforces.Common
-    ( getObjects
+    ( getData
     ) where
 
 import Data.Aeson
@@ -46,10 +46,10 @@ codeforcesDecode (ResponseOk   x) = Right x
 baseUrl :: String
 baseUrl = "https://codeforces.com/api"
 
--- | `getObjects` @path query@ is a generic function for returning a list of 
--- result objects from the Codeforces API.
-getObjects :: FromJSON a => String -> Query -> IO (Either String [a])
-getObjects path query = do
+-- | `getData` @path query@ is a general function for returning some result data
+-- from the Codeforces API.
+getData :: FromJSON a => String -> Query -> IO (Either String a)
+getData path query = do
     req <- parseRequest (baseUrl ++ path)
     let request = setRequestQueryString query req
 

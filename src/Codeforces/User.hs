@@ -6,7 +6,6 @@ import Codeforces.Common
 
 import Data.Aeson
 import qualified Data.ByteString.Char8 as BC
-import Data.List (intercalate)
 
 --------------------------------------------------------------------------------
 
@@ -40,9 +39,8 @@ instance FromJSON User where
 
 --------------------------------------------------------------------------------
 
--- | `getUsers` @handles@ returns a list of users given a list of handles
-getUsers :: [Handle] -> IO (Either String [User])
-getUsers hs = getObjects "/user.info" [("handles", Just handles)]
-    where handles = BC.pack $ intercalate ";" hs
+-- | `getUser` @handle@ returns the @User@ with the given @handle@
+getUser :: Handle -> IO (Either String User)
+getUser h = fmap head <$> getData "/user.info" [("handles", Just (BC.pack h))]
 
 --------------------------------------------------------------------------------

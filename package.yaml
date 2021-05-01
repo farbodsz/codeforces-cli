@@ -45,3 +45,4 @@ executables:
       - -Wall
     dependencies:
       - codeforces-cli
+      - optparse-applicative
