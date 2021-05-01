@@ -1,0 +1,9 @@
+# Generated
+.stack-work/
+codeforces-cli.cabal
+*~
+
+# Profiling
+*.prof
+*.aux
+*.hp
