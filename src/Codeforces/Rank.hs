@@ -5,9 +5,9 @@ data RankColor = Gray | Green | Cyan | Blue | Violet | Orange | Red
 type RatingBounds = (Int, Int)
 
 data Rank = Rank
-    { rankName     :: String
-    , rankColor    :: RankColor
-    , ratingBounds :: RatingBounds
+    { rankName   :: String
+    , rankColor  :: RankColor
+    , rankBounds :: RatingBounds
     }
 
 -- | `ranks` is list of all Codeforces ranks
@@ -30,4 +30,4 @@ getRank :: Int -> Rank
 getRank x = head $ filter withinRankBounds ranks
   where
     withinRankBounds r =
-        let bounds = ratingBounds r in x >= fst bounds && x <= snd bounds
+        let bounds = rankBounds r in x >= fst bounds && x <= snd bounds

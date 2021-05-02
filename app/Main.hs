@@ -39,11 +39,11 @@ userInfo h = do
 
 printUser :: User -> IO ()
 printUser u = do
-    let rank = getRank (rating u)
+    let rank = getRank (userRating u)
 
     putStrLn ""
-    putStrLn $ concat [indent, rankName rank, " ", handle u]
-    whenJust (sequenceA [firstName u, lastName u])
+    putStrLn $ concat [indent, rankName rank, " ", userHandle u]
+    whenJust (sequenceA [userFirstName u, userLastName u])
         $ \ns -> putStrLn $ indent ++ unwords ns
 
     printRatings u
@@ -51,18 +51,17 @@ printUser u = do
     putStrLn ""
 
 printRatings :: User -> IO ()
-printRatings u = do
-    let currRating = rating u
-    let bestRating = maxRating u
+printRatings User {..} = do
     putStrLn ""
-    putStrLn $ indent ++ "Rating:       " ++ show currRating
-    putStrLn $ indent ++ "              (max: " ++ show bestRating ++ ")"
+    putStrLn $ indent ++ "Rating:       " ++ show userRating
+    putStrLn $ indent ++ "              (max: " ++ show userMaxRating ++ ")"
 
 printPlace :: User -> IO ()
-printPlace u = do
-    whenJust (sequenceA [city u, country u]) $ \xs ->
+printPlace User {..} = do
+    whenJust (sequenceA [userCity, userCountry]) $ \xs ->
         putStrLn $ indent ++ "City:         " ++ intercalate ", " xs
-    whenJust (organization u) $ \o -> putStrLn $ indent ++ "Organisation: " ++ o
+    whenJust (userOrganization)
+        $ \o -> putStrLn $ indent ++ "Organisation: " ++ o
 
 --------------------------------------------------------------------------------
 

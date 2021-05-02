@@ -12,15 +12,15 @@ import qualified Data.ByteString.Char8 as BC
 type Handle = String
 
 data User = User
-    { handle        :: Handle
-    , firstName     :: Maybe String
-    , lastName      :: Maybe String
-    , rating        :: Int
-    , maxRating     :: Int
-    , city          :: Maybe String
-    , country       :: Maybe String
-    , organization  :: Maybe String
-    , friendOfCount :: Int
+    { userHandle        :: Handle
+    , userFirstName     :: Maybe String
+    , userLastName      :: Maybe String
+    , userRating        :: Int
+    , userMaxRating     :: Int
+    , userCity          :: Maybe String
+    , userCountry       :: Maybe String
+    , userOrganization  :: Maybe String
+    , userFriendOfCount :: Int
     }
     deriving Show
 
