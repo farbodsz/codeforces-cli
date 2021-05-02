@@ -29,6 +29,7 @@ dependencies:
 default-extensions:
   - LambdaCase
   - OverloadedStrings
+  - RecordWildCards
   - ScopedTypeVariables
 
 library:

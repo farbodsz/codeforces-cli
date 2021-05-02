@@ -11,6 +11,9 @@ import Commands
 import Control.Monad.Extra
 
 import Data.List (intercalate)
+import Data.Time
+
+import Table
 
 --------------------------------------------------------------------------------
 
@@ -71,6 +74,25 @@ contestList gym = do
         Right cs -> printContests cs
 
 printContests :: [Contest] -> IO ()
-printContests = print
+printContests cs = forM_ (makeTable headers rows) putStrLn
+  where
+    headers = [("#", 4), ("Name", 50), ("Date", 16), ("Duration", 10)]
+    rows    = map
+        (\Contest {..} ->
+            [ show contestId
+            , contestName
+            , fmtStartTime contestStartTime
+            , fmtDuration contestDuration
+            ]
+        )
+        cs
+
+fmtStartTime :: Maybe UTCTime -> String
+fmtStartTime = \case
+    Nothing -> " "
+    Just t  -> formatTime defaultTimeLocale "%H:%M  %d-%b-%y" t
+
+fmtDuration :: DiffTime -> String
+fmtDuration = formatTime defaultTimeLocale "%h:%0M hrs"
 
 --------------------------------------------------------------------------------
