@@ -22,8 +22,8 @@ main = do
     options <- parseCommands
 
     case options of
-        ContestsCmd gym -> contestList gym
-        UserCmd     h   -> userInfo h
+        ContestsCmd gym past -> contestList gym past
+        UserCmd h            -> userInfo h
 
 --------------------------------------------------------------------------------
 
@@ -66,12 +66,26 @@ printPlace u = do
 
 --------------------------------------------------------------------------------
 
-contestList :: Bool -> IO ()
-contestList gym = do
+contestList :: Bool -> Bool -> IO ()
+contestList gym past = do
     contests <- getContests gym
     case contests of
         Left  e  -> print e
-        Right cs -> printContests cs
+        Right cs -> do
+            now <- getCurrentTime
+            printContests $ filterContests past now cs
+
+-- | `filterContests` @onlyPast currentTime@ filters and orders a list of
+-- contests depending on whether past or upcoming should be displayed.
+filterContests :: Bool -> UTCTime -> [Contest] -> [Contest]
+filterContests past now = if past
+    then filter isContestPast
+    else reverse . filter (not . isContestPast)
+  where
+    isContestPast :: Contest -> Bool
+    isContestPast c = case contestStartTime c of
+        Nothing -> False
+        Just t  -> t < now
 
 printContests :: [Contest] -> IO ()
 printContests cs = forM_ (makeTable headers rows) putStrLn
