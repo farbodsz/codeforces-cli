@@ -3,7 +3,8 @@
 module Main where
 
 import Codeforces.Contest
-import Codeforces.Rank
+import Codeforces.Rank hiding (RankColor(..))
+import qualified Codeforces.Rank as R
 import Codeforces.User
 
 import Commands
@@ -12,6 +13,8 @@ import Control.Monad.Extra
 
 import Data.List (intercalate)
 import Data.Time
+
+import System.Console.ANSI
 
 import Table
 
@@ -30,6 +33,23 @@ main = do
 indent :: String
 indent = replicate 6 ' '
 
+putRankStr :: R.RankColor -> String -> IO ()
+putRankStr c s = do
+    setSGR [SetColor Foreground Dull (convertRankColor c)]
+    putStr s
+    setSGR [Reset]
+
+convertRankColor :: R.RankColor -> Color
+convertRankColor R.Gray   = White
+convertRankColor R.Green  = Green
+convertRankColor R.Cyan   = Cyan
+convertRankColor R.Blue   = Blue
+convertRankColor R.Violet = Magenta
+convertRankColor R.Orange = Yellow
+convertRankColor R.Red    = Red
+
+--------------------------------------------------------------------------------
+
 userInfo :: Handle -> IO ()
 userInfo h = do
     usr <- getUser h
@@ -42,7 +62,8 @@ printUser u = do
     let rank = getRank (userRating u)
 
     putStrLn ""
-    putStrLn $ concat [indent, rankName rank, " ", userHandle u]
+    putRankStr (rankColor rank)
+        $ concat [indent, rankName rank, " ", userHandle u, "\n"]
     whenJust (sequenceA [userFirstName u, userLastName u])
         $ \ns -> putStrLn $ indent ++ unwords ns
 
@@ -53,15 +74,21 @@ printUser u = do
 printRatings :: User -> IO ()
 printRatings User {..} = do
     putStrLn ""
-    putStrLn $ indent ++ "Rating:       " ++ show userRating
-    putStrLn $ indent ++ "              (max: " ++ show userMaxRating ++ ")"
+    let currRank = getRank userRating
+    putStr $ indent ++ "Rating:       "
+    putRankStr (rankColor currRank) $ show userRating ++ "\n"
+
+    let maxRank = getRank userRating
+    putStr $ indent ++ "              (max: "
+    putRankStr (rankColor maxRank)
+        $ concat [rankName maxRank, ", ", show userMaxRating]
+    putStrLn ")"
 
 printPlace :: User -> IO ()
 printPlace User {..} = do
     whenJust (sequenceA [userCity, userCountry]) $ \xs ->
         putStrLn $ indent ++ "City:         " ++ intercalate ", " xs
-    whenJust (userOrganization)
-        $ \o -> putStrLn $ indent ++ "Organisation: " ++ o
+    whenJust userOrganization $ \o -> putStrLn $ indent ++ "Organisation: " ++ o
 
 --------------------------------------------------------------------------------
 
