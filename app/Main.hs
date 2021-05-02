@@ -2,6 +2,7 @@
 
 module Main where
 
+import Codeforces.Contest
 import Codeforces.Rank
 import Codeforces.User
 
@@ -18,7 +19,8 @@ main = do
     options <- parseCommands
 
     case options of
-        UserCmd h -> userInfo h
+        ContestsCmd gym -> contestList gym
+        UserCmd     h   -> userInfo h
 
 --------------------------------------------------------------------------------
 
@@ -58,5 +60,17 @@ printPlace u = do
     whenJust (sequenceA [city u, country u]) $ \xs ->
         putStrLn $ indent ++ "City:         " ++ intercalate ", " xs
     whenJust (organization u) $ \o -> putStrLn $ indent ++ "Organisation: " ++ o
+
+--------------------------------------------------------------------------------
+
+contestList :: Bool -> IO ()
+contestList gym = do
+    contests <- getContests gym
+    case contests of
+        Left  e  -> print e
+        Right cs -> printContests cs
+
+printContests :: [Contest] -> IO ()
+printContests = print
 
 --------------------------------------------------------------------------------
