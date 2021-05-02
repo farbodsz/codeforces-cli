@@ -9,7 +9,7 @@ import Options.Applicative
 
 --------------------------------------------------------------------------------
 
-data Command = ContestsCmd Bool Bool | UserCmd String
+data Command = ContestsCmd Bool Bool | RatingsCmd String | UserCmd String
     deriving Eq
 
 --------------------------------------------------------------------------------
@@ -21,9 +21,11 @@ opts :: ParserInfo Command
 opts = info (commandP <**> helper) (header "Codeforces CLI" <> fullDesc)
 
 commandP :: Parser Command
-commandP = subparser
-    $  command "contests" (info contestsP (progDesc "")) 
-    <> command "user" (info userP (progDesc ""))
+commandP =
+    subparser
+        $  command "contests" (info contestsP (progDesc ""))
+        <> command "ratings"  (info ratingsP (progDesc ""))
+        <> command "user"     (info userP (progDesc ""))
 
 contestsP :: Parser Command
 contestsP =
@@ -39,6 +41,9 @@ contestsP =
                 (long "past" <> short 'p' <> help
                     "Displays past contests instead of upcoming contests."
                 )
+
+ratingsP :: Parser Command
+ratingsP = RatingsCmd <$> argument str (metavar "HANDLE")
 
 userP :: Parser Command
 userP = UserCmd <$> argument str (metavar "HANDLE")

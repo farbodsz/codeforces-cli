@@ -5,6 +5,7 @@ module Main where
 import Codeforces.Contest
 import Codeforces.Rank hiding (RankColor(..))
 import qualified Codeforces.Rank as R
+import Codeforces.RatingChange
 import Codeforces.User
 
 import Commands
@@ -23,12 +24,10 @@ import Table
 main :: IO ()
 main = do
     options <- parseCommands
-
     case options of
         ContestsCmd gym past -> contestList gym past
-        UserCmd h            -> userInfo h
-
---------------------------------------------------------------------------------
+        UserCmd    h         -> userInfo h
+        RatingsCmd h         -> userRatings h
 
 indent :: String
 indent = replicate 6 ' '
@@ -47,48 +46,6 @@ convertRankColor R.Blue   = Blue
 convertRankColor R.Violet = Magenta
 convertRankColor R.Orange = Yellow
 convertRankColor R.Red    = Red
-
---------------------------------------------------------------------------------
-
-userInfo :: Handle -> IO ()
-userInfo h = do
-    usr <- getUser h
-    case usr of
-        Left  e -> print e
-        Right u -> printUser u
-
-printUser :: User -> IO ()
-printUser u = do
-    let rank = getRank (userRating u)
-
-    putStrLn ""
-    putRankStr (rankColor rank)
-        $ concat [indent, rankName rank, " ", userHandle u, "\n"]
-    whenJust (sequenceA [userFirstName u, userLastName u])
-        $ \ns -> putStrLn $ indent ++ unwords ns
-
-    printRatings u
-    printPlace u
-    putStrLn ""
-
-printRatings :: User -> IO ()
-printRatings User {..} = do
-    putStrLn ""
-    let currRank = getRank userRating
-    putStr $ indent ++ "Rating:       "
-    putRankStr (rankColor currRank) $ show userRating ++ "\n"
-
-    let maxRank = getRank userRating
-    putStr $ indent ++ "              (max: "
-    putRankStr (rankColor maxRank)
-        $ concat [rankName maxRank, ", ", show userMaxRating]
-    putStrLn ")"
-
-printPlace :: User -> IO ()
-printPlace User {..} = do
-    whenJust (sequenceA [userCity, userCountry]) $ \xs ->
-        putStrLn $ indent ++ "City:         " ++ intercalate ", " xs
-    whenJust userOrganization $ \o -> putStrLn $ indent ++ "Organisation: " ++ o
 
 --------------------------------------------------------------------------------
 
@@ -134,5 +91,77 @@ fmtStartTime = \case
 
 fmtDuration :: DiffTime -> String
 fmtDuration = formatTime defaultTimeLocale "%h:%0M hrs"
+
+--------------------------------------------------------------------------------
+
+userInfo :: Handle -> IO ()
+userInfo h = do
+    usr <- getUser h
+    case usr of
+        Left  e -> print e
+        Right u -> printUser u
+
+printUser :: User -> IO ()
+printUser u = do
+    let rank = getRank (userRating u)
+
+    putStrLn ""
+    putRankStr (rankColor rank)
+        $ concat [indent, rankName rank, " ", userHandle u, "\n"]
+    whenJust (sequenceA [userFirstName u, userLastName u])
+        $ \ns -> putStrLn $ indent ++ unwords ns
+
+    printRatings u
+    printPlace u
+    putStrLn ""
+
+printRatings :: User -> IO ()
+printRatings User {..} = do
+    putStrLn ""
+    let currRank = getRank userRating
+    putStr $ indent ++ "Rating:       "
+    putRankStr (rankColor currRank) $ show userRating ++ "\n"
+
+    let maxRank = getRank userRating
+    putStr $ indent ++ "              (max: "
+    putRankStr (rankColor maxRank)
+        $ concat [rankName maxRank, ", ", show userMaxRating]
+    putStrLn ")"
+
+printPlace :: User -> IO ()
+printPlace User {..} = do
+    whenJust (sequenceA [userCity, userCountry]) $ \xs ->
+        putStrLn $ indent ++ "City:         " ++ intercalate ", " xs
+    whenJust userOrganization $ \o -> putStrLn $ indent ++ "Organisation: " ++ o
+
+--------------------------------------------------------------------------------
+
+userRatings :: Handle -> IO ()
+userRatings h = do
+    urh <- getUserRatingHistory h
+    case urh of
+        Left  e   -> print e
+        Right rcs -> printRatingChanges rcs
+
+printRatingChanges :: [RatingChange] -> IO ()
+printRatingChanges rcs = forM_ (makeTable headers rows) putStrLn
+  where
+    headers =
+        [("#", 3), ("Contest", 50), ("Rank", 5), ("Change", 6), ("Rating", 6)]
+    rows = reverse $ zipWith
+        (\RatingChange {..} num ->
+            [ show num
+            , rcContestName
+            , show rcRank
+            , fmtChange (rcNewRating - rcOldRating)
+            , show rcNewRating
+            ]
+        )
+        rcs
+        [1 ..]
+    fmtChange x
+        | x > 0     = "+" ++ show x
+        | x == 0    = " " ++ show x
+        | otherwise = show x
 
 --------------------------------------------------------------------------------
