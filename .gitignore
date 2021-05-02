@@ -7,3 +7,6 @@ codeforces-cli.cabal
 *.prof
 *.aux
 *.hp
+
+# ghci config
+.ghci
