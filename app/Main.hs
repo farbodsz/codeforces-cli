@@ -32,11 +32,12 @@ main = do
 indent :: String
 indent = replicate 6 ' '
 
-putRankStr :: R.RankColor -> String -> IO ()
-putRankStr c s = do
-    setSGR [SetColor Foreground Dull (convertRankColor c)]
-    putStr s
-    setSGR [Reset]
+colored :: Color -> String -> String
+colored c s =
+    concat [setSGRCode [SetColor Foreground Dull c], s, setSGRCode [Reset]]
+
+rankColored :: R.RankColor -> String -> String
+rankColored c = colored (convertRankColor c)
 
 convertRankColor :: R.RankColor -> Color
 convertRankColor R.Gray   = White
@@ -46,6 +47,12 @@ convertRankColor R.Blue   = Blue
 convertRankColor R.Violet = Magenta
 convertRankColor R.Orange = Yellow
 convertRankColor R.Red    = Red
+
+plainCell :: String -> Cell
+plainCell = Cell [Reset]
+
+coloredCell :: Color -> String -> Cell
+coloredCell c = Cell [SetColor Foreground Dull c]
 
 --------------------------------------------------------------------------------
 
@@ -76,11 +83,12 @@ printContests cs = forM_ (makeTable headers rows) putStrLn
     headers = [("#", 4), ("Name", 50), ("Date", 16), ("Duration", 10)]
     rows    = map
         (\Contest {..} ->
-            [ show contestId
-            , contestName
-            , fmtStartTime contestStartTime
-            , fmtDuration contestDuration
-            ]
+            plainCell
+                <$> [ show contestId
+                    , contestName
+                    , fmtStartTime contestStartTime
+                    , fmtDuration contestDuration
+                    ]
         )
         cs
 
@@ -106,8 +114,8 @@ printUser u = do
     let rank = getRank (userRating u)
 
     putStrLn ""
-    putRankStr (rankColor rank)
-        $ concat [indent, rankName rank, " ", userHandle u, "\n"]
+    putStrLn $ rankColored (rankColor rank) $ concat
+        [indent, rankName rank, " ", userHandle u, "\n"]
     whenJust (sequenceA [userFirstName u, userLastName u])
         $ \ns -> putStrLn $ indent ++ unwords ns
 
@@ -118,15 +126,20 @@ printUser u = do
 printRatings :: User -> IO ()
 printRatings User {..} = do
     putStrLn ""
-    let currRank = getRank userRating
-    putStr $ indent ++ "Rating:       "
-    putRankStr (rankColor currRank) $ show userRating ++ "\n"
-
+    putStrLn $ concat
+        [ indent
+        , "Rating:       "
+        , rankColored (rankColor (getRank userRating)) (show userRating)
+        ]
     let maxRank = getRank userRating
-    putStr $ indent ++ "              (max: "
-    putRankStr (rankColor maxRank)
-        $ concat [rankName maxRank, ", ", show userMaxRating]
-    putStrLn ")"
+    putStrLn $ concat
+        [ indent
+        , "              (max: "
+        , rankColored
+            (rankColor maxRank)
+            (concat [rankName maxRank, ", ", show userMaxRating])
+        , ")"
+        ]
 
 printPlace :: User -> IO ()
 printPlace User {..} = do
@@ -150,18 +163,21 @@ printRatingChanges rcs = forM_ (makeTable headers rows) putStrLn
         [("#", 3), ("Contest", 50), ("Rank", 5), ("Change", 6), ("Rating", 6)]
     rows = reverse $ zipWith
         (\RatingChange {..} num ->
-            [ show num
-            , rcContestName
-            , show rcRank
+            [ plainCell $ show num
+            , plainCell rcContestName
+            , plainCell $ show rcRank
             , fmtChange (rcNewRating - rcOldRating)
-            , show rcNewRating
+            , fmtRating rcNewRating
             ]
         )
         rcs
-        [1 ..]
+        ([1 ..] :: [Int])
     fmtChange x
-        | x > 0     = "+" ++ show x
-        | x == 0    = " " ++ show x
-        | otherwise = show x
+        | x > 0     = coloredCell Green $ "+" ++ show x
+        | x == 0    = plainCell $ " " ++ show x
+        | otherwise = coloredCell Red $ show x
+    fmtRating x =
+        let color = convertRankColor $ rankColor $ getRank x
+        in coloredCell color (show x)
 
 --------------------------------------------------------------------------------
