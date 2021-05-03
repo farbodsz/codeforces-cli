@@ -6,6 +6,7 @@ import Codeforces.Common
 
 import Data.Aeson
 import qualified Data.ByteString.Char8 as BC
+import Data.Text (Text)
 import Data.Time
 import Data.Time.Clock.POSIX
 
@@ -34,7 +35,7 @@ instance FromJSON ContestPhase where
 
 data Contest = Contest
     { contestId        :: Int
-    , contestName      :: String
+    , contestName      :: Text
     , contestType      :: ScoringType
     , contestPhase     :: ContestPhase
     , contestFrozen    :: Bool

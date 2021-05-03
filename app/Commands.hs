@@ -5,6 +5,8 @@ module Commands
     , parseCommands
     ) where
 
+import Data.Text (Text)
+
 import Options.Applicative
 
 --------------------------------------------------------------------------------
@@ -12,8 +14,8 @@ import Options.Applicative
 data Command
     = ContestsCmd Bool Bool
     | ProblemsCmd
-    | RatingsCmd String
-    | UserCmd String
+    | RatingsCmd Text
+    | UserCmd Text
     deriving Eq
 
 --------------------------------------------------------------------------------

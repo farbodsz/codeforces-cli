@@ -5,21 +5,22 @@ module Codeforces.User where
 import Codeforces.Common
 
 import Data.Aeson
-import qualified Data.ByteString.Char8 as BC
+import Data.Text (Text)
+import qualified Data.Text.Encoding as T
 
 --------------------------------------------------------------------------------
 
-type Handle = String
+type Handle = Text
 
 data User = User
     { userHandle        :: Handle
-    , userFirstName     :: Maybe String
-    , userLastName      :: Maybe String
+    , userFirstName     :: Maybe Text
+    , userLastName      :: Maybe Text
     , userRating        :: Int
     , userMaxRating     :: Int
-    , userCity          :: Maybe String
-    , userCountry       :: Maybe String
-    , userOrganization  :: Maybe String
+    , userCity          :: Maybe Text
+    , userCountry       :: Maybe Text
+    , userOrganization  :: Maybe Text
     , userFriendOfCount :: Int
     }
     deriving Show
@@ -41,6 +42,6 @@ instance FromJSON User where
 
 -- | `getUser` @handle@ returns the @User@ with the given @handle@
 getUser :: Handle -> IO (Either String User)
-getUser h = fmap head <$> getData "/user.info" [("handles", Just (BC.pack h))]
+getUser h = fmap head <$> getData "/user.info" [("handles", Just (T.encodeUtf8 h))]
 
 --------------------------------------------------------------------------------

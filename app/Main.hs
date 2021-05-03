@@ -13,7 +13,9 @@ import Commands
 
 import Control.Monad.Extra
 
-import Data.List (intercalate)
+import Data.Text (Text)
+import qualified Data.Text as T
+import qualified Data.Text.IO as T
 import Data.Time
 
 import System.Console.ANSI
@@ -31,14 +33,17 @@ main = do
         UserCmd    h         -> userInfo h
         RatingsCmd h         -> userRatings h
 
-indent :: String
-indent = replicate 6 ' '
+indent :: Text
+indent = T.replicate 6 " "
 
-colored :: Color -> String -> String
-colored c s =
-    concat [setSGRCode [SetColor Foreground Dull c], s, setSGRCode [Reset]]
+colored :: Color -> Text -> Text
+colored c s = T.concat
+    [ T.pack $ setSGRCode [SetColor Foreground Dull c]
+    , s
+    , T.pack $ setSGRCode [Reset]
+    ]
 
-rankColored :: R.RankColor -> String -> String
+rankColored :: R.RankColor -> Text -> Text
 rankColored c = colored (convertRankColor c)
 
 convertRankColor :: R.RankColor -> Color
@@ -50,10 +55,10 @@ convertRankColor R.Violet = Magenta
 convertRankColor R.Orange = Yellow
 convertRankColor R.Red    = Red
 
-plainCell :: String -> Cell
+plainCell :: Text -> Cell
 plainCell = Cell [Reset]
 
-coloredCell :: Color -> String -> Cell
+coloredCell :: Color -> Text -> Cell
 coloredCell c = Cell [SetColor Foreground Dull c]
 
 --------------------------------------------------------------------------------
@@ -77,13 +82,13 @@ filterContests past now = if past
         Just t  -> t < now
 
 printContests :: [Contest] -> IO ()
-printContests cs = forM_ (makeTable headers rows) putStrLn
+printContests cs = forM_ (makeTable headers rows) T.putStrLn
   where
     headers = [("#", 4), ("Name", 50), ("Date", 16), ("Duration", 10)]
     rows    = map
         (\Contest {..} ->
             plainCell
-                <$> [ show contestId
+                <$> [ T.pack $ show contestId
                     , contestName
                     , fmtStartTime contestStartTime
                     , fmtDuration contestDuration
@@ -91,13 +96,13 @@ printContests cs = forM_ (makeTable headers rows) putStrLn
         )
         cs
 
-fmtStartTime :: Maybe UTCTime -> String
+fmtStartTime :: Maybe UTCTime -> Text
 fmtStartTime = \case
     Nothing -> " "
-    Just t  -> formatTime defaultTimeLocale "%H:%M  %d-%b-%y" t
+    Just t  -> T.pack $ formatTime defaultTimeLocale "%H:%M  %d-%b-%y" t
 
-fmtDuration :: DiffTime -> String
-fmtDuration = formatTime defaultTimeLocale "%h:%0M hrs"
+fmtDuration :: DiffTime -> Text
+fmtDuration = T.pack . formatTime defaultTimeLocale "%h:%0M hrs"
 
 --------------------------------------------------------------------------------
 
@@ -105,15 +110,15 @@ problemList :: IO ()
 problemList = getProblems [] >>= either print printProblems
 
 printProblems :: [Problem] -> IO ()
-printProblems ps = forM_ (makeTable headers rows) putStrLn
+printProblems ps = forM_ (makeTable headers rows) T.putStrLn
   where
     headers = [("#", 6), ("Name", 40), ("Rating", 6)]
     rows    = map
         (\Problem {..} ->
             plainCell
-                <$> [ maybe "" show problemContestId ++ problemIndex
+                <$> [ maybe "" (T.pack . show) problemContestId <> problemIndex
                     , problemName
-                    , maybe "" show problemRating
+                    , maybe "" (T.pack . show) problemRating
                     ]
         )
         ps
@@ -128,10 +133,10 @@ printUser u = do
     let rank = getRank (userRating u)
 
     putStrLn ""
-    putStrLn $ rankColored (rankColor rank) $ concat
+    T.putStrLn $ rankColored (rankColor rank) $ T.concat
         [indent, rankName rank, " ", userHandle u, "\n"]
     whenJust (sequenceA [userFirstName u, userLastName u])
-        $ \ns -> putStrLn $ indent ++ unwords ns
+        $ \ns -> T.putStrLn $ indent <> T.unwords ns
 
     printRatings u
     printPlace u
@@ -140,26 +145,26 @@ printUser u = do
 printRatings :: User -> IO ()
 printRatings User {..} = do
     putStrLn ""
-    putStrLn $ concat
+    T.putStrLn $ T.concat
         [ indent
         , "Rating:       "
-        , rankColored (rankColor (getRank userRating)) (show userRating)
+        , rankColored (rankColor (getRank userRating)) (T.pack $ show userRating)
         ]
     let maxRank = getRank userRating
-    putStrLn $ concat
+    T.putStrLn $ T.concat
         [ indent
         , "              (max: "
         , rankColored
             (rankColor maxRank)
-            (concat [rankName maxRank, ", ", show userMaxRating])
+            (T.concat [rankName maxRank, ", ", T.pack $ show userMaxRating])
         , ")"
         ]
 
 printPlace :: User -> IO ()
 printPlace User {..} = do
     whenJust (sequenceA [userCity, userCountry]) $ \xs ->
-        putStrLn $ indent ++ "City:         " ++ intercalate ", " xs
-    whenJust userOrganization $ \o -> putStrLn $ indent ++ "Organisation: " ++ o
+        T.putStrLn $ indent <> "City:         " <> T.intercalate ", " xs
+    whenJust userOrganization $ \o -> T.putStrLn $ indent <> "Organisation: " <> o
 
 --------------------------------------------------------------------------------
 
@@ -167,27 +172,31 @@ userRatings :: Handle -> IO ()
 userRatings h = getUserRatingHistory h >>= either print printRatingChanges
 
 printRatingChanges :: [RatingChange] -> IO ()
-printRatingChanges rcs = forM_ (makeTable headers rows) putStrLn
+printRatingChanges rcs = forM_ (makeTable headers rows) T.putStrLn
   where
     headers =
         [("#", 3), ("Contest", 50), ("Rank", 5), ("Change", 6), ("Rating", 6)]
     rows = reverse $ zipWith
         (\RatingChange {..} num ->
-            [ plainCell $ show num
+            [ plainCell $ T.pack $ show num
             , plainCell rcContestName
-            , plainCell $ show rcRank
+            , plainCell $ T.pack $ show rcRank
             , fmtChange (rcNewRating - rcOldRating)
             , fmtRating rcNewRating
             ]
         )
         rcs
         ([1 ..] :: [Int])
+
+    fmtChange :: Int -> Cell
     fmtChange x
-        | x > 0     = coloredCell Green $ "+" ++ show x
-        | x == 0    = plainCell $ " " ++ show x
-        | otherwise = coloredCell Red $ show x
+        | x > 0     = coloredCell Green $ T.concat ["+", T.pack $ show x]
+        | x == 0    = plainCell $ T.concat [" ", T.pack $ show x]
+        | otherwise = coloredCell Red $ T.pack $ show x
+
+    fmtRating :: Int -> Cell
     fmtRating x =
         let color = convertRankColor $ rankColor $ getRank x
-        in coloredCell color (show x)
+        in coloredCell color $ T.pack $ show x
 
 --------------------------------------------------------------------------------

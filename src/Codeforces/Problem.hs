@@ -13,18 +13,19 @@ module Codeforces.Problem
 import Codeforces.Common
 
 import Data.Aeson
-import qualified Data.ByteString.Char8 as BC
-import Data.List (intercalate)
+import Data.Text (Text)
+import qualified Data.Text as T
+import qualified Data.Text.Encoding as T
 
 --------------------------------------------------------------------------------
 
 -- | A letter, or letter with digit(s) indicating the problem index in a
 -- contest.
-type ProblemIndex = String
+type ProblemIndex = Text
 
 type Points = Float
 
-type ProblemTag = String
+type ProblemTag = Text
 
 data ProblemType = Programming | Question
     deriving Show
@@ -37,9 +38,9 @@ instance FromJSON ProblemType where
 
 data Problem = Problem
     { problemContestId :: Maybe Int
-    , problemSetName   :: Maybe String
+    , problemSetName   :: Maybe Text
     , problemIndex     :: ProblemIndex
-    , problemName      :: String
+    , problemName      :: Text
     , problemType      :: ProblemType
     , problemPoints    :: Maybe Points
     , problemRating    :: Maybe Int
@@ -95,7 +96,8 @@ instance FromJSON ProblemsResponse where
 getAllProblemData :: [ProblemTag] -> IO (Either String ProblemsResponse)
 getAllProblemData ts = getData "/problemset.problems" [("tags", tags)]
   where
-    tags = if null ts then Nothing else Just $ BC.pack $ intercalate ";" ts
+    tags =
+        if null ts then Nothing else Just $ T.encodeUtf8 $ T.intercalate ";" ts
 
 --------------------------------------------------------------------------------
 

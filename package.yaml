@@ -24,6 +24,7 @@ dependencies:
   - aeson
   - bytestring
   - http-conduit
+  - text
   - time
 
 default-extensions:
