@@ -61,11 +61,8 @@ coloredCell c = Cell [SetColor Foreground Dull c]
 contestList :: Bool -> Bool -> IO ()
 contestList gym past = do
     contests <- getContests gym
-    case contests of
-        Left  e  -> print e
-        Right cs -> do
-            now <- getCurrentTime
-            printContests $ filterContests past now cs
+    now      <- getCurrentTime
+    either print (printContests . filterContests past now) contests
 
 -- | `filterContests` @onlyPast currentTime@ filters and orders a list of
 -- contests depending on whether past or upcoming should be displayed.
@@ -105,11 +102,7 @@ fmtDuration = formatTime defaultTimeLocale "%h:%0M hrs"
 --------------------------------------------------------------------------------
 
 problemList :: IO ()
-problemList = do
-    problems <- getProblems []
-    case problems of
-        Left  e  -> print e
-        Right ps -> printProblems ps
+problemList = getProblems [] >>= either print printProblems
 
 printProblems :: [Problem] -> IO ()
 printProblems ps = forM_ (makeTable headers rows) putStrLn
@@ -128,11 +121,7 @@ printProblems ps = forM_ (makeTable headers rows) putStrLn
 --------------------------------------------------------------------------------
 
 userInfo :: Handle -> IO ()
-userInfo h = do
-    usr <- getUser h
-    case usr of
-        Left  e -> print e
-        Right u -> printUser u
+userInfo h = getUser h >>= either print printUser
 
 printUser :: User -> IO ()
 printUser u = do
@@ -175,11 +164,7 @@ printPlace User {..} = do
 --------------------------------------------------------------------------------
 
 userRatings :: Handle -> IO ()
-userRatings h = do
-    urh <- getUserRatingHistory h
-    case urh of
-        Left  e   -> print e
-        Right rcs -> printRatingChanges rcs
+userRatings h = getUserRatingHistory h >>= either print printRatingChanges
 
 printRatingChanges :: [RatingChange] -> IO ()
 printRatingChanges rcs = forM_ (makeTable headers rows) putStrLn
