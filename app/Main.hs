@@ -3,6 +3,7 @@
 module Main where
 
 import Codeforces.Contest
+import Codeforces.Problem
 import Codeforces.Rank hiding (RankColor(..))
 import qualified Codeforces.Rank as R
 import Codeforces.RatingChange
@@ -26,6 +27,7 @@ main = do
     options <- parseCommands
     case options of
         ContestsCmd gym past -> contestList gym past
+        ProblemsCmd          -> problemList
         UserCmd    h         -> userInfo h
         RatingsCmd h         -> userRatings h
 
@@ -99,6 +101,29 @@ fmtStartTime = \case
 
 fmtDuration :: DiffTime -> String
 fmtDuration = formatTime defaultTimeLocale "%h:%0M hrs"
+
+--------------------------------------------------------------------------------
+
+problemList :: IO ()
+problemList = do
+    problems <- getProblems []
+    case problems of
+        Left  e  -> print e
+        Right ps -> printProblems ps
+
+printProblems :: [Problem] -> IO ()
+printProblems ps = forM_ (makeTable headers rows) putStrLn
+  where
+    headers = [("#", 6), ("Name", 40), ("Rating", 6)]
+    rows    = map
+        (\Problem {..} ->
+            plainCell
+                <$> [ maybe "" show problemContestId ++ problemIndex
+                    , problemName
+                    , maybe "" show problemRating
+                    ]
+        )
+        ps
 
 --------------------------------------------------------------------------------
 

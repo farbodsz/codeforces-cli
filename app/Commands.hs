@@ -9,7 +9,11 @@ import Options.Applicative
 
 --------------------------------------------------------------------------------
 
-data Command = ContestsCmd Bool Bool | RatingsCmd String | UserCmd String
+data Command
+    = ContestsCmd Bool Bool
+    | ProblemsCmd
+    | RatingsCmd String
+    | UserCmd String
     deriving Eq
 
 --------------------------------------------------------------------------------
@@ -24,6 +28,7 @@ commandP :: Parser Command
 commandP =
     subparser
         $  command "contests" (info contestsP (progDesc ""))
+        <> command "problems" (info problemsP (progDesc ""))
         <> command "ratings"  (info ratingsP (progDesc ""))
         <> command "user"     (info userP (progDesc ""))
 
@@ -41,6 +46,9 @@ contestsP =
                 (long "past" <> short 'p' <> help
                     "Displays past contests instead of upcoming contests."
                 )
+
+problemsP :: Parser Command
+problemsP = pure ProblemsCmd
 
 ratingsP :: Parser Command
 ratingsP = RatingsCmd <$> argument str (metavar "HANDLE")
