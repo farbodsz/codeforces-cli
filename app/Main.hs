@@ -7,6 +7,7 @@ import Codeforces.Problem
 import Codeforces.Rank hiding (RankColor(..))
 import qualified Codeforces.Rank as R
 import Codeforces.RatingChange
+import Codeforces.Submission
 import Codeforces.User
 
 import Commands
@@ -32,6 +33,7 @@ main = do
         ProblemsCmd opts -> problemList opts
         UserCmd     h    -> userInfo h
         RatingsCmd  h    -> userRatings h
+        StatusCmd   h    -> userStatus h
 
 --------------------------------------------------------------------------------
 
@@ -157,9 +159,9 @@ printRatingChanges rcs = forM_ (makeTable headers rows) T.putStrLn
         [("#", 3), ("Contest", 50), ("Rank", 5), ("Change", 6), ("Rating", 6)]
     rows = reverse $ zipWith
         (\RatingChange {..} num ->
-            [ plainCell $ T.pack $ show num
+            [ plainCell $ showText num
             , plainCell rcContestName
-            , plainCell $ T.pack $ show rcRank
+            , plainCell $ showText rcRank
             , differenceCell (rcNewRating - rcOldRating)
             , ratingCell rcNewRating
             ]
@@ -168,6 +170,79 @@ printRatingChanges rcs = forM_ (makeTable headers rows) T.putStrLn
         ([1 ..] :: [Int])
 
 --------------------------------------------------------------------------------
+
+userStatus :: Handle -> IO ()
+userStatus h = getUserStatus h 40 >>= either print printSubmissions
+
+printSubmissions :: [Submission] -> IO ()
+printSubmissions ss = forM_ (makeTable headers rows) T.putStrLn
+  where
+    headers =
+        [ ("When"   , 12)
+        , ("Problem", 35)
+        , ("Lang"   , 11)
+        , ("Verdict", 35)
+        , ("Time"   , 7)
+        , ("Memory" , 8)
+        ]
+    rows = map
+        (\Submission {..} ->
+            [ plainCell $ fmtTime submissionTime
+            , plainCell $ fmtProblem submissionProblem
+            , plainCell submissionProgrammingLanguage
+            , verdictCell
+                submissionTestset
+                submissionPassedTestCount
+                submissionPoints
+                submissionVerdict
+            , plainCell $ showText submissionTimeConsumed <> " ms"
+            , plainCell $ fmtMemory submissionMemoryConsumed
+            ]
+        )
+        ss
+    fmtTime = T.pack . formatTime defaultTimeLocale "%b/%d %H:%M"
+    fmtProblem Problem {..} = T.concat [problemIndex, " - ", problemName]
+    fmtMemory x = showText (x `div` 1000) <> " KB"
+
+-- | `verdictCell` @testset passedTestCount points verdict@ returns a cell
+-- displaying the status of a submission, such as "Accepted" or "Wrong answer on
+-- pretest 2".
+verdictCell :: Testset -> Int -> Maybe Points -> Maybe Verdict -> Cell
+verdictCell _       _      _      Nothing  = plainCell "In queue"
+verdictCell testset passed points (Just v) = case v of
+    Ok -> case testset of
+        Tests      -> coloredCell Green "Accepted"
+        Samples    -> coloredCell Green "Samples passed"
+        Pretests   -> coloredCell Green "Pretests passed"
+        Challenges -> coloredCell Green "Challenges passed"
+    Partial -> coloredCell Yellow $ maybe
+        "Partial result"
+        (\pts -> T.concat ["Partial result: ", showText pts, " points"])
+        points
+    Challenged              -> coloredCell Red "Hacked"
+    CompilationError        -> plainCell $ verdictText v
+    Skipped                 -> plainCell $ verdictText v
+    SecurityViolated        -> plainCell $ verdictText v
+    Crashed                 -> plainCell $ verdictText v
+    InputPreparationCrashed -> plainCell $ verdictText v
+    Rejected                -> plainCell $ verdictText v
+    _ ->
+        let
+            currTest = passed + 1
+            clr      = if v == Testing then White else Blue
+            text     = T.concat
+                [ verdictText v
+                , " on "
+                , T.toLower . T.init $ showText testset
+                , " "
+                , showText currTest
+                ]
+        in coloredCell clr text
+
+--------------------------------------------------------------------------------
+
+showText :: Show a => a -> Text
+showText = T.pack . show
 
 -- | `rankColored` @rankColor text@ wraps some text around SGR codes to display
 -- them in the given rank color.

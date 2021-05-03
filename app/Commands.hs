@@ -17,6 +17,7 @@ data Command
     = ContestsCmd ContestOpts
     | ProblemsCmd ProblemsOpts
     | RatingsCmd Handle
+    | StatusCmd Handle
     | UserCmd Handle
     deriving Eq
 
@@ -46,6 +47,7 @@ commandP =
         $  command "contests" (info contestsP (progDesc ""))
         <> command "problems" (info problemsP (progDesc ""))
         <> command "ratings"  (info ratingsP (progDesc ""))
+        <> command "status"   (info statusP (progDesc ""))
         <> command "user"     (info userP (progDesc ""))
 
 contestsP :: Parser Command
@@ -90,6 +92,9 @@ problemsP =
 
 ratingsP :: Parser Command
 ratingsP = RatingsCmd <$> argument str (metavar "HANDLE")
+
+statusP :: Parser Command
+statusP = StatusCmd <$> argument str (metavar "HANDLE")
 
 userP :: Parser Command
 userP = UserCmd <$> argument str (metavar "HANDLE")
