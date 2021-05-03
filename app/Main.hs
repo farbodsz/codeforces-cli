@@ -29,9 +29,9 @@ main = do
     options <- parseCommands
     case options of
         ContestsCmd gym past -> contestList gym past
-        ProblemsCmd          -> problemList
-        UserCmd    h         -> userInfo h
-        RatingsCmd h         -> userRatings h
+        ProblemsCmd opts     -> problemList opts
+        UserCmd     h        -> userInfo h
+        RatingsCmd  h        -> userRatings h
 
 indent :: Text
 indent = T.replicate 6 " "
@@ -106,8 +106,13 @@ fmtDuration = T.pack . formatTime defaultTimeLocale "%h:%0M hrs"
 
 --------------------------------------------------------------------------------
 
-problemList :: IO ()
-problemList = getProblems [] >>= either print printProblems
+problemList :: ProblemsOpts -> IO ()
+problemList ProblemsOpts {..} = problems >>= either print printProblems
+  where
+    problems = fmap (filter inRatingRange) <$> getProblems []
+    inRatingRange p = case problemRating p of
+        Nothing -> False
+        Just r  -> optMinRating <= r && r <= optMaxRating
 
 printProblems :: [Problem] -> IO ()
 printProblems ps = forM_ (makeTable headers rows) T.putStrLn
@@ -148,7 +153,9 @@ printRatings User {..} = do
     T.putStrLn $ T.concat
         [ indent
         , "Rating:       "
-        , rankColored (rankColor (getRank userRating)) (T.pack $ show userRating)
+        , rankColored
+            (rankColor (getRank userRating))
+            (T.pack $ show userRating)
         ]
     let maxRank = getRank userRating
     T.putStrLn $ T.concat
@@ -164,7 +171,8 @@ printPlace :: User -> IO ()
 printPlace User {..} = do
     whenJust (sequenceA [userCity, userCountry]) $ \xs ->
         T.putStrLn $ indent <> "City:         " <> T.intercalate ", " xs
-    whenJust userOrganization $ \o -> T.putStrLn $ indent <> "Organisation: " <> o
+    whenJust userOrganization
+        $ \o -> T.putStrLn $ indent <> "Organisation: " <> o
 
 --------------------------------------------------------------------------------
 

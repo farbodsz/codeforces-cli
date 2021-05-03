@@ -2,6 +2,7 @@
 
 module Commands
     ( Command(..)
+    , ProblemsOpts(..)
     , parseCommands
     ) where
 
@@ -13,9 +14,15 @@ import Options.Applicative
 
 data Command
     = ContestsCmd Bool Bool
-    | ProblemsCmd
+    | ProblemsCmd ProblemsOpts
     | RatingsCmd Text
     | UserCmd Text
+    deriving Eq
+
+data ProblemsOpts = ProblemsOpts
+    { optMinRating :: Int
+    , optMaxRating :: Int
+    }
     deriving Eq
 
 --------------------------------------------------------------------------------
@@ -50,7 +57,28 @@ contestsP =
                 )
 
 problemsP :: Parser Command
-problemsP = pure ProblemsCmd
+problemsP =
+    fmap ProblemsCmd
+        $   ProblemsOpts
+        <$> option
+                auto
+                (  long "minRating"
+                <> short 'r'
+                <> help "Filter problems by minimum rating."
+                <> showDefault
+                <> value (fst defaultRatingRange)
+                <> metavar "INT"
+                )
+        <*> option
+                auto
+                (  long "maxRating"
+                <> short 'R'
+                <> help "Filter problems by maximum rating."
+                <> showDefault
+                <> value (snd defaultRatingRange)
+                <> metavar "INT"
+                )
+    where defaultRatingRange = (0, 3500)
 
 ratingsP :: Parser Command
 ratingsP = RatingsCmd <$> argument str (metavar "HANDLE")
