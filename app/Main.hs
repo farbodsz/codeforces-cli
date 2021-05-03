@@ -33,34 +33,6 @@ main = do
         UserCmd     h    -> userInfo h
         RatingsCmd  h    -> userRatings h
 
-indent :: Text
-indent = T.replicate 6 " "
-
-colored :: Color -> Text -> Text
-colored c s = T.concat
-    [ T.pack $ setSGRCode [SetColor Foreground Dull c]
-    , s
-    , T.pack $ setSGRCode [Reset]
-    ]
-
-rankColored :: R.RankColor -> Text -> Text
-rankColored c = colored (convertRankColor c)
-
-convertRankColor :: R.RankColor -> Color
-convertRankColor R.Gray   = White
-convertRankColor R.Green  = Green
-convertRankColor R.Cyan   = Cyan
-convertRankColor R.Blue   = Blue
-convertRankColor R.Violet = Magenta
-convertRankColor R.Orange = Yellow
-convertRankColor R.Red    = Red
-
-plainCell :: Text -> Cell
-plainCell = Cell [Reset]
-
-coloredCell :: Color -> Text -> Cell
-coloredCell c = Cell [SetColor Foreground Dull c]
-
 --------------------------------------------------------------------------------
 
 contestList :: ContestOpts -> IO ()
@@ -95,14 +67,9 @@ printContests cs = forM_ (makeTable headers rows) T.putStrLn
                     ]
         )
         cs
-
-fmtStartTime :: Maybe UTCTime -> Text
-fmtStartTime = \case
-    Nothing -> " "
-    Just t  -> T.pack $ formatTime defaultTimeLocale "%H:%M  %d-%b-%y" t
-
-fmtDuration :: DiffTime -> Text
-fmtDuration = T.pack . formatTime defaultTimeLocale "%h:%0M hrs"
+    fmtStartTime =
+        maybe "" (T.pack . formatTime defaultTimeLocale "%H:%M  %d-%b-%y")
+    fmtDuration = T.pack . formatTime defaultTimeLocale "%h:%0M hrs"
 
 --------------------------------------------------------------------------------
 
@@ -120,11 +87,12 @@ printProblems ps = forM_ (makeTable headers rows) T.putStrLn
     headers = [("#", 6), ("Name", 40), ("Rating", 6)]
     rows    = map
         (\Problem {..} ->
-            plainCell
-                <$> [ maybe "" (T.pack . show) problemContestId <> problemIndex
-                    , problemName
-                    , maybe "" (T.pack . show) problemRating
-                    ]
+            [ plainCell
+                $  maybe "" (T.pack . show) problemContestId
+                <> problemIndex
+            , plainCell problemName
+            , maybe blankCell ratingCell problemRating
+            ]
         )
         ps
 
@@ -174,6 +142,9 @@ printPlace User {..} = do
     whenJust userOrganization
         $ \o -> T.putStrLn $ indent <> "Organisation: " <> o
 
+indent :: Text
+indent = T.replicate 6 " "
+
 --------------------------------------------------------------------------------
 
 userRatings :: Handle -> IO ()
@@ -189,22 +160,53 @@ printRatingChanges rcs = forM_ (makeTable headers rows) T.putStrLn
             [ plainCell $ T.pack $ show num
             , plainCell rcContestName
             , plainCell $ T.pack $ show rcRank
-            , fmtChange (rcNewRating - rcOldRating)
-            , fmtRating rcNewRating
+            , differenceCell (rcNewRating - rcOldRating)
+            , ratingCell rcNewRating
             ]
         )
         rcs
         ([1 ..] :: [Int])
 
-    fmtChange :: Int -> Cell
-    fmtChange x
-        | x > 0     = coloredCell Green $ T.concat ["+", T.pack $ show x]
-        | x == 0    = plainCell $ T.concat [" ", T.pack $ show x]
-        | otherwise = coloredCell Red $ T.pack $ show x
+--------------------------------------------------------------------------------
 
-    fmtRating :: Int -> Cell
-    fmtRating x =
-        let color = convertRankColor $ rankColor $ getRank x
-        in coloredCell color $ T.pack $ show x
+-- | `rankColored` @rankColor text@ wraps some text around SGR codes to display
+-- them in the given rank color.
+rankColored :: R.RankColor -> Text -> Text
+rankColored c s = T.concat
+    [ T.pack $ setSGRCode [SetColor Foreground Dull (convertRankColor c)]
+    , s
+    , T.pack $ setSGRCode [Reset]
+    ]
+
+convertRankColor :: R.RankColor -> Color
+convertRankColor R.Gray   = White
+convertRankColor R.Green  = Green
+convertRankColor R.Cyan   = Cyan
+convertRankColor R.Blue   = Blue
+convertRankColor R.Violet = Magenta
+convertRankColor R.Orange = Yellow
+convertRankColor R.Red    = Red
+
+plainCell :: Text -> Cell
+plainCell = Cell [Reset]
+
+coloredCell :: Color -> Text -> Cell
+coloredCell c = Cell [SetColor Foreground Dull c]
+
+blankCell :: Cell
+blankCell = plainCell ""
+
+ratingCell :: Int -> Cell
+ratingCell x =
+    let color = convertRankColor $ rankColor $ getRank x
+    in coloredCell color $ T.pack $ show x
+
+-- | `differenceCell` @diff@ colors a number red, white or green, depending on
+-- whether it's negative, 0, or positive.
+differenceCell :: Int -> Cell
+differenceCell x
+    | x > 0     = coloredCell Green $ T.concat ["+", T.pack $ show x]
+    | x == 0    = plainCell $ T.concat [" ", T.pack $ show x]
+    | otherwise = coloredCell Red $ T.pack $ show x
 
 --------------------------------------------------------------------------------
