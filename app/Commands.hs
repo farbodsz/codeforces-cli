@@ -2,21 +2,28 @@
 
 module Commands
     ( Command(..)
+    , ContestOpts(..)
     , ProblemsOpts(..)
     , parseCommands
     ) where
 
-import Data.Text (Text)
+import Codeforces.User (Handle)
 
 import Options.Applicative
 
 --------------------------------------------------------------------------------
 
 data Command
-    = ContestsCmd Bool Bool
+    = ContestsCmd ContestOpts
     | ProblemsCmd ProblemsOpts
-    | RatingsCmd Text
-    | UserCmd Text
+    | RatingsCmd Handle
+    | UserCmd Handle
+    deriving Eq
+
+data ContestOpts = ContestOpts
+    { optIsGym  :: Bool
+    , optIsPast :: Bool
+    }
     deriving Eq
 
 data ProblemsOpts = ProblemsOpts
@@ -43,7 +50,8 @@ commandP =
 
 contestsP :: Parser Command
 contestsP =
-    ContestsCmd
+    fmap ContestsCmd
+        $   ContestOpts
         <$> switch
                 (  long "gym"
                 <> short 'g'

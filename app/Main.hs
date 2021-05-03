@@ -26,12 +26,12 @@ import Table
 
 main :: IO ()
 main = do
-    options <- parseCommands
-    case options of
-        ContestsCmd gym past -> contestList gym past
-        ProblemsCmd opts     -> problemList opts
-        UserCmd     h        -> userInfo h
-        RatingsCmd  h        -> userRatings h
+    command <- parseCommands
+    case command of
+        ContestsCmd opts -> contestList opts
+        ProblemsCmd opts -> problemList opts
+        UserCmd     h    -> userInfo h
+        RatingsCmd  h    -> userRatings h
 
 indent :: Text
 indent = T.replicate 6 " "
@@ -63,11 +63,11 @@ coloredCell c = Cell [SetColor Foreground Dull c]
 
 --------------------------------------------------------------------------------
 
-contestList :: Bool -> Bool -> IO ()
-contestList gym past = do
-    contests <- getContests gym
+contestList :: ContestOpts -> IO ()
+contestList ContestOpts {..} = do
+    contests <- getContests optIsGym
     now      <- getCurrentTime
-    either print (printContests . filterContests past now) contests
+    either print (printContests . filterContests optIsPast now) contests
 
 -- | `filterContests` @onlyPast currentTime@ filters and orders a list of
 -- contests depending on whether past or upcoming should be displayed.
