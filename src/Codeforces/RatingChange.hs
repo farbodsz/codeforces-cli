@@ -6,7 +6,8 @@ import Codeforces.Common
 import Codeforces.User (Handle)
 
 import Data.Aeson
-import qualified Data.ByteString.Char8 as BC
+import Data.Text (Text)
+import qualified Data.Text.Encoding as T
 import Data.Time
 import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
 
@@ -14,7 +15,7 @@ import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
 
 data RatingChange = RatingChange
     { rcContestId        :: Int
-    , rcContestName      :: String
+    , rcContestName      :: Text
     , rcHandle           :: Handle
     , rcRank             :: Int
     , rcRatingUpdateDate :: UTCTime
@@ -38,6 +39,6 @@ instance FromJSON RatingChange where
 -- | `getUserRatingHistory` @handle@ returns a list of @RatingChange@s for the
 -- requested user
 getUserRatingHistory :: Handle -> IO (Either String [RatingChange])
-getUserRatingHistory h = getData "/user.rating" [("handle", Just (BC.pack h))]
+getUserRatingHistory h = getData "/user.rating" [("handle", Just (T.encodeUtf8 h))]
 
 --------------------------------------------------------------------------------

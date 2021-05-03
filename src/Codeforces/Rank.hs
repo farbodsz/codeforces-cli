@@ -1,11 +1,13 @@
 module Codeforces.Rank where
 
+import Data.Text (Text)
+
 data RankColor = Gray | Green | Cyan | Blue | Violet | Orange | Red
 
 type RatingBounds = (Int, Int)
 
 data Rank = Rank
-    { rankName   :: String
+    { rankName   :: Text
     , rankColor  :: RankColor
     , rankBounds :: RatingBounds
     }
