@@ -210,7 +210,7 @@ printUser u = do
 
     putStrLn ""
     T.putStrLn $ rankColored (rankColor rank) $ T.concat
-        [indent, rankName rank, " ", userHandle u, "\n"]
+        [indent, rankName rank, " ", userHandle u]
     whenJust (sequenceA [userFirstName u, userLastName u])
         $ \ns -> T.putStrLn $ indent <> T.unwords ns
 
