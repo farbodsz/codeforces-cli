@@ -37,6 +37,8 @@ data ProblemsOpts = ProblemsOpts
 
 data StandingOpts = StandingOpts
     { optShowUnofficial :: Bool
+    , optFromIndex      :: Int
+    , optRowCount       :: Int
     }
     deriving Eq
 
@@ -84,7 +86,7 @@ problemsP =
                 <> short 'r'
                 <> help "Filter problems by minimum rating."
                 <> showDefault
-                <> value (fst defaultRatingRange)
+                <> value 0
                 <> metavar "INT"
                 )
         <*> option
@@ -93,10 +95,9 @@ problemsP =
                 <> short 'R'
                 <> help "Filter problems by maximum rating."
                 <> showDefault
-                <> value (snd defaultRatingRange)
+                <> value 3500
                 <> metavar "INT"
                 )
-    where defaultRatingRange = (0, 3500)
 
 ratingsP :: Parser Command
 ratingsP = RatingsCmd <$> argument str (metavar "HANDLE")
@@ -106,13 +107,34 @@ standingsP =
     StandingsCmd <$> argument auto (metavar "CONTEST_ID") <*> standingOpts
 
 standingOpts :: Parser StandingOpts
-standingOpts = StandingOpts <$> switch
-    (  long "unofficial"
-    <> short 'u'
-    <> help
-           "If true than all participants (virtual, out of competition) are\
-           \ shown. Otherwise, only official contestants are shown."
-    )
+standingOpts =
+    StandingOpts
+        <$> switch
+                (  long "unofficial"
+                <> short 'u'
+                <> help
+                       "If true than all participants (virtual, out of\
+                       \ competition) are shown. Otherwise, only official\
+                       \ contestants are shown."
+                )
+        <*> option
+                auto
+                (  long "from"
+                <> short 'f'
+                <> help "1-based index of the standings row to start from."
+                <> showDefault
+                <> value 1
+                <> metavar "INT"
+                )
+        <*> option
+                auto
+                (  long "count"
+                <> short 'n'
+                <> help "Number of standing rows to return."
+                <> showDefault
+                <> value 30
+                <> metavar "INT"
+                )
 
 statusP :: Parser Command
 statusP = StatusCmd <$> argument str (metavar "HANDLE")

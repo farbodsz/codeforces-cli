@@ -107,12 +107,13 @@ printProblems ps = forM_ (makeTable headers rows) T.putStrLn
 --------------------------------------------------------------------------------
 
 standingsList :: Int -> StandingOpts -> IO ()
-standingsList cId unofficial =
-    runExceptT (printStandings cId unofficial) >>= either print pure
+standingsList cId opts =
+    runExceptT (printStandings cId opts) >>= either print pure
 
 printStandings :: Int -> StandingOpts -> ExceptT String IO ()
 printStandings cId StandingOpts {..} = do
-    ss <- ExceptT $ getContestStandings cId 1 40 optShowUnofficial
+    ss <- ExceptT
+        $ getContestStandings cId optFromIndex optRowCount optShowUnofficial
     let rl = standingsRanklist ss
     us <- standingsUsers rl
     lift $ forM_ (standingsTable ss us) T.putStrLn
