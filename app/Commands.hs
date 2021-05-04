@@ -53,12 +53,22 @@ opts = info (commandP <**> helper) (header "Codeforces CLI" <> fullDesc)
 commandP :: Parser Command
 commandP =
     subparser
-        $  command "contests"  (info contestsP (progDesc ""))
-        <> command "problems"  (info problemsP (progDesc ""))
-        <> command "ratings"   (info ratingsP (progDesc ""))
-        <> command "standings" (info standingsP (progDesc ""))
-        <> command "status"    (info statusP (progDesc ""))
-        <> command "user"      (info userP (progDesc ""))
+        $  command
+               "contests"
+               (info contestsP (header "Upcoming or past contests"))
+        <> command
+               "problems"
+               (info problemsP (progDesc "View and filter problem sets"))
+        <> command
+               "ratings"
+               (info ratingsP (progDesc "Rating changes of a user"))
+        <> command
+               "standings"
+               (info standingsP (progDesc "Standings table of a contest"))
+        <> command
+               "status"
+               (info statusP (progDesc "Recent submissions of a user"))
+        <> command "user" (info userP (progDesc "Information about a user"))
 
 contestsP :: Parser Command
 contestsP =
