@@ -112,8 +112,12 @@ standingsList cId opts =
 
 printStandings :: Int -> StandingOpts -> ExceptT String IO ()
 printStandings cId StandingOpts {..} = do
-    ss <- ExceptT
-        $ getContestStandings cId optFromIndex optRowCount optShowUnofficial
+    ss <- ExceptT $ getContestStandings
+        cId
+        optFromIndex
+        optRowCount
+        optRoom
+        optShowUnofficial
     let rl = standingsRanklist ss
     us <- standingsUsers rl
     lift $ forM_ (standingsTable ss us) T.putStrLn

@@ -103,13 +103,15 @@ getContestStandings
     :: Int            -- ^ ID of the contest
     -> Int            -- ^ the starting index of the ranklist (1-based)
     -> Int            -- ^ number of standing rows to return
+    -> Maybe Int      -- ^ if specified, only standings of the room are returned
     -> Bool           -- ^ if false, only @Contestant@ participations returned
     -> IO (Either String Standings)
-getContestStandings cId from count unofficial = getData
+getContestStandings cId from count mroom unofficial = getData
     "/contest.standings"
     [ ("contestId"     , asArg cId)
     , ("from"          , asArg from)
     , ("count"         , asArg count)
+    , ("room"          , BC.pack . show <$> mroom)
     , ("showUnofficial", asArg unofficial)
     ]
   where

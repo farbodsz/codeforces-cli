@@ -40,6 +40,7 @@ data StandingOpts = StandingOpts
     { optShowUnofficial :: Bool
     , optFromIndex      :: Int
     , optRowCount       :: Int
+    , optRoom           :: Maybe Int
     }
     deriving Eq
 
@@ -130,12 +131,23 @@ standingOpts =
                 (  long "unofficial"
                 <> short 'u'
                 <> help
-                       "If true than all participants (virtual, out of\
+                       "If true then all participants (virtual, out of\
                        \ competition) are shown. Otherwise, only official\
                        \ contestants are shown."
                 )
         <*> fromOpt
         <*> countOpt
+        <*> optional
+                (option
+                    auto
+                    (  long "room"
+                    <> short 'r'
+                    <> help
+                           "If specified, then only participants from this room\
+                           \ are shown. Otherwise, all participants are shown."
+                    <> metavar "INT"
+                    )
+                )
 
 statusP :: Parser Command
 statusP = StatusCmd <$> handleArg <*> statusOpts
@@ -169,7 +181,7 @@ countOpt = option
     <> short 'n'
     <> help "Number of rows to return."
     <> showDefault
-    <> value 30
+    <> value 40
     <> metavar "INT"
     )
 
