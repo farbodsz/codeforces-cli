@@ -15,6 +15,8 @@ import Codeforces.User
 import Commands
 
 import Control.Monad.Extra
+import Control.Monad.Trans.Class
+import Control.Monad.Trans.Except
 
 import qualified Data.Map as M
 import Data.Text (Text)
@@ -105,25 +107,26 @@ printProblems ps = forM_ (makeTable headers rows) T.putStrLn
 --------------------------------------------------------------------------------
 
 standingsList :: Int -> IO ()
-standingsList cId = do
-    ss <- getContestStandings cId 1 40
-    case ss of
-        Left  e   -> print e
-        Right ss' -> do
-            let rl = standingsRanklist ss'
-            standingsUsers rl >>= either print (printStandings rl)
+standingsList cId = runExceptT (printStandings cId) >>= either print pure
+
+printStandings :: Int -> ExceptT String IO ()
+printStandings cId = do
+    ss <- ExceptT $ getContestStandings cId 1 40
+    let rl = standingsRanklist ss
+    us <- standingsUsers rl
+    lift $ forM_ (standingsTable rl us) T.putStrLn
 
 -- | 'standingsUsers' @rows@ returns a map of @User@s included in the standings.
-standingsUsers :: [RanklistRow] -> IO (Either String (M.Map Handle User))
+standingsUsers :: [RanklistRow] -> ExceptT String IO (M.Map Handle User)
 standingsUsers rrs = do
-    us <- getUsers handles
-    pure $ M.fromList . zip handles <$> us
+    us <- ExceptT $ getUsers handles
+    pure $ M.fromList $ zip handles us
   where
     handles :: [Handle]
     handles = concatMap (map memberHandle . partyMembers . rrParty) rrs
 
-printStandings :: [RanklistRow] -> M.Map Handle User -> IO ()
-printStandings rrs us = forM_ (makeTable headers rows) T.putStrLn
+standingsTable :: [RanklistRow] -> M.Map Handle User -> Table
+standingsTable rrs us = makeTable headers rows
   where
     headers = [("#", 10), ("Who", 25), ("=", 6), ("*", 5)]
     rows    = map

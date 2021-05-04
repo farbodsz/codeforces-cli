@@ -2,6 +2,7 @@
 
 module Table
     ( Cell(..)
+    , Table
     , makeTable
     ) where
 
@@ -26,9 +27,12 @@ type ColConfig = (Text, Int)
 
 type Row = [Cell]
 
+-- | The table output is a list of row strings.
+type Table = [Text]
+
 -- | `makeTable` @colConfigs rows@ returns a list of row strings including the
 -- header row
-makeTable :: [ColConfig] -> [Row] -> [Text]
+makeTable :: [ColConfig] -> [Row] -> Table
 makeTable hs rs = makeHeader hs : map (makeRow hs) rs
 
 makeHeader :: [ColConfig] -> Text

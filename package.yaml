@@ -26,6 +26,7 @@ dependencies:
   - http-conduit
   - text
   - time
+  - transformers
 
 default-extensions:
   - LambdaCase
