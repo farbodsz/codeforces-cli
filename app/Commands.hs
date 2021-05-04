@@ -55,7 +55,7 @@ commandP =
     subparser
         $  command
                "contests"
-               (info contestsP (header "Upcoming or past contests"))
+               (info contestsP (progDesc "Upcoming or past contests"))
         <> command
                "problems"
                (info problemsP (progDesc "View and filter problem sets"))
