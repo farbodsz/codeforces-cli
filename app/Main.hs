@@ -114,7 +114,7 @@ printStandings cId = do
     ss <- ExceptT $ getContestStandings cId 1 40
     let rl = standingsRanklist ss
     us <- standingsUsers rl
-    lift $ forM_ (standingsTable rl us) T.putStrLn
+    lift $ forM_ (standingsTable ss us) T.putStrLn
 
 -- | 'standingsUsers' @rows@ returns a map of @User@s included in the standings.
 standingsUsers :: [RanklistRow] -> ExceptT String IO (M.Map Handle User)
@@ -125,19 +125,28 @@ standingsUsers rrs = do
     handles :: [Handle]
     handles = concatMap (map memberHandle . partyMembers . rrParty) rrs
 
-standingsTable :: [RanklistRow] -> M.Map Handle User -> Table
-standingsTable rrs us = makeTable headers rows
+standingsTable :: Standings -> M.Map Handle User -> Table
+standingsTable s us = makeTable headers rows
   where
-    headers = [("#", 10), ("Who", 25), ("=", 6), ("*", 5)]
-    rows    = map
+    headers = [("#", 10), ("Who", 25), ("=", totalPointsColW), ("*", 5)]
+        ++ map (\p -> (problemIndex p, problemColW)) (standingsProblems s)
+    rows = map
         (\RanklistRow {..} ->
             [ plainCell $ showText rrRank
-            , partyCell rrParty us
-            , plainCell $ showText rrPoints
-            , plainCell $ showText rrPenalty
-            ]
+                , partyCell rrParty us
+                , totalPointsCell rrPoints
+                , plainCell $ showText rrPenalty
+                ]
+                ++ map (problemResultCell scoringType) rrProblemResults
         )
-        rrs
+        (standingsRanklist s)
+
+    scoringType     = contestType $ standingsContest s
+
+    -- Final score in ICPC contest is number of problems solved (single digit)
+    totalPointsColW = if scoringType == ScoringICPC then 2 else 6
+    -- Problem score in ICPC contest is only 2-3 chars wide (e.g. "+5", "-2")
+    problemColW     = if scoringType == ScoringICPC then 3 else 5
 
 partyCell :: Party -> M.Map Handle User -> Cell
 partyCell Party {..} us = case partyMembers of
@@ -151,6 +160,35 @@ partyCell Party {..} us = case partyMembers of
     ms -> case partyTeamName of
         Nothing       -> plainCell $ T.intercalate "," $ map memberHandle ms
         Just teamName -> plainCell teamName
+
+-- | 'showPoints' @points@ returns a textual representation of the points type.
+-- If @points@ is an integer (e.g. @42.0@) then the integer without decimals
+-- is returned (@42@), otherwise the decimals are shown.
+showPoints :: Points -> Text
+showPoints x = if x == fromInteger r then showText r else showText x
+    where r = round x
+
+-- | Cell showing the total points obtained by a user in the contest.
+totalPointsCell :: Points -> Cell
+totalPointsCell = plainCell . showPoints
+
+-- | Cell showing the points obtained for a problem submission.
+problemResultCell :: ScoringType -> ProblemResult -> Cell
+problemResultCell st pr@ProblemResult {..} = if prNotAttempted pr
+    then blankCell
+    else case st of
+        ScoringCF -> if prPoints == 0
+            then coloredCell Red $ "-" <> showText prRejectedAttemptCount
+            else coloredCell Green $ showPoints prPoints
+        ScoringICPC -> if prPoints == 0
+            then coloredCell Blue $ "-" <> showText prRejectedAttemptCount
+            else coloredCell Green $ if prRejectedAttemptCount == 0
+                then "+"
+                else "+" <> showText prRejectedAttemptCount
+        ScoringIOI -> case prPoints of
+            0   -> blankCell
+            100 -> coloredCell Green "100"
+            x   -> plainCell (showPoints x)
 
 --------------------------------------------------------------------------------
 

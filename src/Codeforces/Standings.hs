@@ -38,6 +38,11 @@ data ProblemResult = ProblemResult
     , prBestSubmissionTime   :: Maybe Int
     }
 
+-- | True if no solution has been submitted for this problem in the contest.
+prNotAttempted :: ProblemResult -> Bool
+prNotAttempted ProblemResult {..} =
+    prPoints == 0 && prRejectedAttemptCount == 0
+
 instance FromJSON ProblemResult where
     parseJSON = withObject "ProblemResult" $ \v ->
         ProblemResult

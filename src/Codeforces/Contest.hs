@@ -13,7 +13,7 @@ import Data.Time.Clock.POSIX
 --------------------------------------------------------------------------------
 
 data ScoringType = ScoringCF | ScoringIOI | ScoringICPC
-    deriving Show
+    deriving (Show, Eq)
 
 instance FromJSON ScoringType where
     parseJSON = withText "ScoringType" $ \case
