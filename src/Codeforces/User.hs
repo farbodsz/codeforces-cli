@@ -5,6 +5,7 @@ module Codeforces.User where
 import Codeforces.Common
 
 import Data.Aeson
+import Data.Maybe
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
@@ -32,8 +33,8 @@ instance FromJSON User where
             <$> (v .: "handle")
             <*> (v .:? "firstName")
             <*> (v .:? "lastName")
-            <*> (v .: "rating")
-            <*> (v .: "maxRating")
+            <*> (fromMaybe 0 <$> v .:? "rating")
+            <*> (fromMaybe 0 <$> v .:? "maxRating")
             <*> (v .:? "city")
             <*> (v .:? "country")
             <*> (v .:? "organization")
