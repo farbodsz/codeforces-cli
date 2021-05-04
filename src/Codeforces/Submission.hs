@@ -139,11 +139,12 @@ instance FromJSON Submission where
 
 --------------------------------------------------------------------------------
 
--- | `getUserStatus` @handle count@ returns the @count@ most recent submissions
--- by the user.
-getUserStatus :: Handle -> Int -> IO (Either String [Submission])
-getUserStatus h n = getData
+-- | `getUserStatus` @handle from count@ returns the @count@ most recent
+-- submissions by the user, starting from the @from@-th one.
+getUserStatus :: Handle -> Int -> Int -> IO (Either String [Submission])
+getUserStatus h f n = getData
     "/user.status"
-    [("handle", Just $ T.encodeUtf8 h), ("count", (Just . BC.pack . show) n)]
+    [("handle", Just $ T.encodeUtf8 h), ("from", intArg f), ("count", intArg n)]
+    where intArg = Just . BC.pack . show
 
 --------------------------------------------------------------------------------

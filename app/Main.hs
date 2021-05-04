@@ -39,7 +39,7 @@ main = do
         StandingsCmd cId opts -> standingsList cId opts
         UserCmd    h          -> userInfo h
         RatingsCmd h          -> userRatings h
-        StatusCmd  h          -> userStatus h
+        StatusCmd h opts      -> userStatus h opts
 
 --------------------------------------------------------------------------------
 
@@ -272,8 +272,10 @@ printRatingChanges rcs = forM_ (makeTable headers rows) T.putStrLn
 
 --------------------------------------------------------------------------------
 
-userStatus :: Handle -> IO ()
-userStatus h = getUserStatus h 40 >>= either printError printSubmissions
+userStatus :: Handle -> StatusOpts -> IO ()
+userStatus h StatusOpts {..} =
+    getUserStatus h optStatusFrom optStatusCount
+        >>= either printError printSubmissions
 
 printSubmissions :: [Submission] -> IO ()
 printSubmissions ss = forM_ (makeTable headers rows) T.putStrLn
