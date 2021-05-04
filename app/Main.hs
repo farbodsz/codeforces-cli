@@ -81,8 +81,8 @@ printContests cs = forM_ (makeTable headers rows) T.putStrLn
 
 --------------------------------------------------------------------------------
 
-problemList :: ProblemsOpts -> IO ()
-problemList ProblemsOpts {..} = problems >>= either printError printProblems
+problemList :: ProblemOpts -> IO ()
+problemList ProblemOpts {..} = problems >>= either printError printProblems
   where
     problems = fmap (filter inRatingRange) <$> getProblems []
     inRatingRange p = case problemRating p of

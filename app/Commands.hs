@@ -3,7 +3,7 @@
 module Commands
     ( Command(..)
     , ContestOpts(..)
-    , ProblemsOpts(..)
+    , ProblemOpts(..)
     , StandingOpts(..)
     , StatusOpts(..)
     , parseCommands
@@ -17,7 +17,7 @@ import Options.Applicative
 
 data Command
     = ContestsCmd ContestOpts
-    | ProblemsCmd ProblemsOpts
+    | ProblemsCmd ProblemOpts
     | RatingsCmd Handle
     | StandingsCmd Int StandingOpts
     | StatusCmd Handle StatusOpts
@@ -30,7 +30,7 @@ data ContestOpts = ContestOpts
     }
     deriving Eq
 
-data ProblemsOpts = ProblemsOpts
+data ProblemOpts = ProblemOpts
     { optMinRating :: Int
     , optMaxRating :: Int
     }
@@ -96,7 +96,7 @@ contestsP =
 problemsP :: Parser Command
 problemsP =
     fmap ProblemsCmd
-        $   ProblemsOpts
+        $   ProblemOpts
         <$> option
                 auto
                 (  long "minRating"
