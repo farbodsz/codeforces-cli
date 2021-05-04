@@ -151,16 +151,23 @@ standingsTable s us = makeTable headers rows
 
 partyCell :: Party -> M.Map Handle User -> Cell
 partyCell Party {..} us = case partyMembers of
-    [m] -> case M.lookup (memberHandle m) us of
-        Nothing -> plainCell $ memberHandle m
-        Just u ->
-            let
-                rank = getRank (userRating u)
-                rc   = convertRankColor (rankColor rank)
-            in coloredCell rc (memberHandle m)
+    [Member {..}] -> case M.lookup memberHandle us of
+        Nothing -> plainCell $ participant memberHandle
+        Just u  -> coloredCell (userColor u) (participant memberHandle)
     ms -> case partyTeamName of
-        Nothing       -> plainCell $ T.intercalate "," $ map memberHandle ms
-        Just teamName -> plainCell teamName
+        Nothing       -> plainCell $ participant $ memberList ms
+        Just teamName -> plainCell $ participant teamName
+  where
+    participant = fmtParticipation partyParticipantType
+    memberList  = T.intercalate "," . map memberHandle
+    userColor   = convertRankColor . rankColor . getRank . userRating
+
+-- | 'fmtParticipation' @participantType text@ returns the @text@ with either a
+-- prefix/suffix/no changes, to indicate the type of contest participation.
+fmtParticipation :: ParticipantType -> Text -> Text
+fmtParticipation Virtual    t = t <> " #"
+fmtParticipation Contestant t = t
+fmtParticipation _          t = "* " <> t
 
 -- | 'showPoints' @points@ returns a textual representation of the points type.
 -- If @points@ is an integer (e.g. @42.0@) then the integer without decimals
