@@ -17,6 +17,7 @@ data Command
     = ContestsCmd ContestOpts
     | ProblemsCmd ProblemsOpts
     | RatingsCmd Handle
+    | StandingsCmd Int
     | StatusCmd Handle
     | UserCmd Handle
     deriving Eq
@@ -44,11 +45,12 @@ opts = info (commandP <**> helper) (header "Codeforces CLI" <> fullDesc)
 commandP :: Parser Command
 commandP =
     subparser
-        $  command "contests" (info contestsP (progDesc ""))
-        <> command "problems" (info problemsP (progDesc ""))
-        <> command "ratings"  (info ratingsP (progDesc ""))
-        <> command "status"   (info statusP (progDesc ""))
-        <> command "user"     (info userP (progDesc ""))
+        $  command "contests"  (info contestsP (progDesc ""))
+        <> command "problems"  (info problemsP (progDesc ""))
+        <> command "ratings"   (info ratingsP (progDesc ""))
+        <> command "standings" (info standingsP (progDesc ""))
+        <> command "status"    (info statusP (progDesc ""))
+        <> command "user"      (info userP (progDesc ""))
 
 contestsP :: Parser Command
 contestsP =
@@ -92,6 +94,9 @@ problemsP =
 
 ratingsP :: Parser Command
 ratingsP = RatingsCmd <$> argument str (metavar "HANDLE")
+
+standingsP :: Parser Command
+standingsP = StandingsCmd <$> argument auto (metavar "CONTEST_ID")
 
 statusP :: Parser Command
 statusP = StatusCmd <$> argument str (metavar "HANDLE")

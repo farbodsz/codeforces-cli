@@ -50,5 +50,6 @@ executables:
     dependencies:
       - codeforces-cli
       - ansi-terminal
+      - containers
       - extra
       - optparse-applicative

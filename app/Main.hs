@@ -3,10 +3,12 @@
 module Main where
 
 import Codeforces.Contest
+import Codeforces.Party
 import Codeforces.Problem
 import Codeforces.Rank hiding (RankColor(..))
 import qualified Codeforces.Rank as R
 import Codeforces.RatingChange
+import Codeforces.Standings
 import Codeforces.Submission
 import Codeforces.User
 
@@ -14,6 +16,7 @@ import Commands
 
 import Control.Monad.Extra
 
+import qualified Data.Map as M
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
@@ -29,11 +32,12 @@ main :: IO ()
 main = do
     command <- parseCommands
     case command of
-        ContestsCmd opts -> contestList opts
-        ProblemsCmd opts -> problemList opts
-        UserCmd     h    -> userInfo h
-        RatingsCmd  h    -> userRatings h
-        StatusCmd   h    -> userStatus h
+        ContestsCmd  opts -> contestList opts
+        ProblemsCmd  opts -> problemList opts
+        StandingsCmd cId  -> standingsList cId
+        UserCmd      h    -> userInfo h
+        RatingsCmd   h    -> userRatings h
+        StatusCmd    h    -> userStatus h
 
 --------------------------------------------------------------------------------
 
@@ -97,6 +101,53 @@ printProblems ps = forM_ (makeTable headers rows) T.putStrLn
             ]
         )
         ps
+
+--------------------------------------------------------------------------------
+
+standingsList :: Int -> IO ()
+standingsList cId = do
+    ss <- getContestStandings cId 1 40
+    case ss of
+        Left  e   -> print e
+        Right ss' -> do
+            let rl = standingsRanklist ss'
+            standingsUsers rl >>= either print (printStandings rl)
+
+-- | 'standingsUsers' @rows@ returns a map of @User@s included in the standings.
+standingsUsers :: [RanklistRow] -> IO (Either String (M.Map Handle User))
+standingsUsers rrs = do
+    us <- getUsers handles
+    pure $ M.fromList . zip handles <$> us
+  where
+    handles :: [Handle]
+    handles = concatMap (map memberHandle . partyMembers . rrParty) rrs
+
+printStandings :: [RanklistRow] -> M.Map Handle User -> IO ()
+printStandings rrs us = forM_ (makeTable headers rows) T.putStrLn
+  where
+    headers = [("#", 10), ("Who", 25), ("=", 6), ("*", 5)]
+    rows    = map
+        (\RanklistRow {..} ->
+            [ plainCell $ showText rrRank
+            , partyCell rrParty us
+            , plainCell $ showText rrPoints
+            , plainCell $ showText rrPenalty
+            ]
+        )
+        rrs
+
+partyCell :: Party -> M.Map Handle User -> Cell
+partyCell Party {..} us = case partyMembers of
+    [m] -> case M.lookup (memberHandle m) us of
+        Nothing -> plainCell $ memberHandle m
+        Just u ->
+            let
+                rank = getRank (userRating u)
+                rc   = convertRankColor (rankColor rank)
+            in coloredCell rc (memberHandle m)
+    ms -> case partyTeamName of
+        Nothing       -> plainCell $ T.intercalate "," $ map memberHandle ms
+        Just teamName -> plainCell teamName
 
 --------------------------------------------------------------------------------
 

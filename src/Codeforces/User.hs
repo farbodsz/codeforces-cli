@@ -6,6 +6,7 @@ import Codeforces.Common
 
 import Data.Aeson
 import Data.Text (Text)
+import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 
 --------------------------------------------------------------------------------
@@ -42,6 +43,12 @@ instance FromJSON User where
 
 -- | `getUser` @handle@ returns the @User@ with the given @handle@
 getUser :: Handle -> IO (Either String User)
-getUser h = fmap head <$> getData "/user.info" [("handles", Just (T.encodeUtf8 h))]
+getUser h = fmap head <$> getUsers [h]
+
+-- | `getUsers` @handles@ returns a list of @User@s with the given @handles@
+getUsers :: [Handle] -> IO (Either String [User])
+getUsers hs = getData
+    "/user.info"
+    [("handles", Just $ T.encodeUtf8 $ T.intercalate ";" hs)]
 
 --------------------------------------------------------------------------------
