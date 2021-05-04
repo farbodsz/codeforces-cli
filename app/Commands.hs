@@ -4,6 +4,7 @@ module Commands
     ( Command(..)
     , ContestOpts(..)
     , ProblemsOpts(..)
+    , StandingOpts(..)
     , parseCommands
     ) where
 
@@ -17,7 +18,7 @@ data Command
     = ContestsCmd ContestOpts
     | ProblemsCmd ProblemsOpts
     | RatingsCmd Handle
-    | StandingsCmd Int
+    | StandingsCmd Int StandingOpts
     | StatusCmd Handle
     | UserCmd Handle
     deriving Eq
@@ -31,6 +32,11 @@ data ContestOpts = ContestOpts
 data ProblemsOpts = ProblemsOpts
     { optMinRating :: Int
     , optMaxRating :: Int
+    }
+    deriving Eq
+
+data StandingOpts = StandingOpts
+    { optShowUnofficial :: Bool
     }
     deriving Eq
 
@@ -96,7 +102,17 @@ ratingsP :: Parser Command
 ratingsP = RatingsCmd <$> argument str (metavar "HANDLE")
 
 standingsP :: Parser Command
-standingsP = StandingsCmd <$> argument auto (metavar "CONTEST_ID")
+standingsP =
+    StandingsCmd <$> argument auto (metavar "CONTEST_ID") <*> standingOpts
+
+standingOpts :: Parser StandingOpts
+standingOpts = StandingOpts <$> switch
+    (  long "unofficial"
+    <> short 'u'
+    <> help
+           "If true than all participants (virtual, out of competition) are\
+           \ shown. Otherwise, only official contestants are shown."
+    )
 
 statusP :: Parser Command
 statusP = StatusCmd <$> argument str (metavar "HANDLE")

@@ -103,14 +103,17 @@ getContestStandings
     :: Int            -- ^ ID of the contest
     -> Int            -- ^ the starting index of the ranklist (1-based)
     -> Int            -- ^ number of standing rows to return
+    -> Bool           -- ^ if false, only @Contestant@ participations returned
     -> IO (Either String Standings)
-getContestStandings cId from count = getData
+getContestStandings cId from count unofficial = getData
     "/contest.standings"
-    [ ("contestId", intToArg cId)
-    , ("from"     , intToArg from)
-    , ("count"    , intToArg count)
+    [ ("contestId"     , asArg cId)
+    , ("from"          , asArg from)
+    , ("count"         , asArg count)
+    , ("showUnofficial", asArg unofficial)
     ]
-    where intToArg = Just . BC.pack . show
-
+  where
+    asArg :: Show a => a -> Maybe BC.ByteString
+    asArg = Just . BC.pack . show
 
 --------------------------------------------------------------------------------

@@ -34,12 +34,12 @@ main :: IO ()
 main = do
     command <- parseCommands
     case command of
-        ContestsCmd  opts -> contestList opts
-        ProblemsCmd  opts -> problemList opts
-        StandingsCmd cId  -> standingsList cId
-        UserCmd      h    -> userInfo h
-        RatingsCmd   h    -> userRatings h
-        StatusCmd    h    -> userStatus h
+        ContestsCmd opts      -> contestList opts
+        ProblemsCmd opts      -> problemList opts
+        StandingsCmd cId opts -> standingsList cId opts
+        UserCmd    h          -> userInfo h
+        RatingsCmd h          -> userRatings h
+        StatusCmd  h          -> userStatus h
 
 --------------------------------------------------------------------------------
 
@@ -106,12 +106,13 @@ printProblems ps = forM_ (makeTable headers rows) T.putStrLn
 
 --------------------------------------------------------------------------------
 
-standingsList :: Int -> IO ()
-standingsList cId = runExceptT (printStandings cId) >>= either print pure
+standingsList :: Int -> StandingOpts -> IO ()
+standingsList cId unofficial =
+    runExceptT (printStandings cId unofficial) >>= either print pure
 
-printStandings :: Int -> ExceptT String IO ()
-printStandings cId = do
-    ss <- ExceptT $ getContestStandings cId 1 40
+printStandings :: Int -> StandingOpts -> ExceptT String IO ()
+printStandings cId StandingOpts {..} = do
+    ss <- ExceptT $ getContestStandings cId 1 40 optShowUnofficial
     let rl = standingsRanklist ss
     us <- standingsUsers rl
     lift $ forM_ (standingsTable ss us) T.putStrLn
