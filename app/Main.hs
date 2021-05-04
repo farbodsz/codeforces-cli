@@ -47,9 +47,9 @@ contestList :: ContestOpts -> IO ()
 contestList ContestOpts {..} = do
     contests <- getContests optIsGym
     now      <- getCurrentTime
-    either print (printContests . filterContests optIsPast now) contests
+    either printError (printContests . filterContests optIsPast now) contests
 
--- | `filterContests` @onlyPast currentTime@ filters and orders a list of
+-- | 'filterContests' @onlyPast currentTime@ filters and orders a list of
 -- contests depending on whether past or upcoming should be displayed.
 filterContests :: Bool -> UTCTime -> [Contest] -> [Contest]
 filterContests past now = if past
@@ -82,7 +82,7 @@ printContests cs = forM_ (makeTable headers rows) T.putStrLn
 --------------------------------------------------------------------------------
 
 problemList :: ProblemsOpts -> IO ()
-problemList ProblemsOpts {..} = problems >>= either print printProblems
+problemList ProblemsOpts {..} = problems >>= either printError printProblems
   where
     problems = fmap (filter inRatingRange) <$> getProblems []
     inRatingRange p = case problemRating p of
@@ -108,7 +108,7 @@ printProblems ps = forM_ (makeTable headers rows) T.putStrLn
 
 standingsList :: Int -> StandingOpts -> IO ()
 standingsList cId opts =
-    runExceptT (printStandings cId opts) >>= either print pure
+    runExceptT (printStandings cId opts) >>= either printError pure
 
 printStandings :: Int -> StandingOpts -> ExceptT String IO ()
 printStandings cId StandingOpts {..} = do
@@ -118,7 +118,7 @@ printStandings cId StandingOpts {..} = do
     us <- standingsUsers rl
     lift $ forM_ (standingsTable ss us) T.putStrLn
 
--- | 'standingsUsers' @rows@ returns a map of @User@s included in the standings.
+-- | 'standingsUsers' @rows@ returns a map of 'User's included in the standings.
 standingsUsers :: [RanklistRow] -> ExceptT String IO (M.Map Handle User)
 standingsUsers rrs = do
     us <- ExceptT $ getUsers handles
@@ -202,7 +202,7 @@ problemResultCell st pr@ProblemResult {..} = if prNotAttempted pr
 --------------------------------------------------------------------------------
 
 userInfo :: Handle -> IO ()
-userInfo h = getUser h >>= either print printUser
+userInfo h = getUser h >>= either printError printUser
 
 printUser :: User -> IO ()
 printUser u = do
@@ -251,7 +251,7 @@ indent = T.replicate 6 " "
 --------------------------------------------------------------------------------
 
 userRatings :: Handle -> IO ()
-userRatings h = getUserRatingHistory h >>= either print printRatingChanges
+userRatings h = getUserRatingHistory h >>= either printError printRatingChanges
 
 printRatingChanges :: [RatingChange] -> IO ()
 printRatingChanges rcs = forM_ (makeTable headers rows) T.putStrLn
@@ -273,7 +273,7 @@ printRatingChanges rcs = forM_ (makeTable headers rows) T.putStrLn
 --------------------------------------------------------------------------------
 
 userStatus :: Handle -> IO ()
-userStatus h = getUserStatus h 40 >>= either print printSubmissions
+userStatus h = getUserStatus h 40 >>= either printError printSubmissions
 
 printSubmissions :: [Submission] -> IO ()
 printSubmissions ss = forM_ (makeTable headers rows) T.putStrLn
@@ -305,7 +305,7 @@ printSubmissions ss = forM_ (makeTable headers rows) T.putStrLn
     fmtProblem Problem {..} = T.concat [problemIndex, " - ", problemName]
     fmtMemory x = showText (x `div` 1000) <> " KB"
 
--- | `verdictCell` @testset passedTestCount points verdict@ returns a cell
+-- | 'verdictCell' @testset passedTestCount points verdict@ returns a cell
 -- displaying the status of a submission, such as "Accepted" or "Wrong answer on
 -- pretest 2".
 verdictCell :: Testset -> Int -> Maybe Points -> Maybe Verdict -> Cell
@@ -342,17 +342,21 @@ verdictCell testset passed points (Just v) = case v of
 
 --------------------------------------------------------------------------------
 
+-- | 'showText' @x@ is a 'Data.Text' version of 'show'
 showText :: Show a => a -> Text
 showText = T.pack . show
 
--- | `rankColored` @rankColor text@ wraps some text around SGR codes to display
--- them in the given rank color.
-rankColored :: R.RankColor -> Text -> Text
-rankColored c s = T.concat
-    [ T.pack $ setSGRCode [SetColor Foreground Dull (convertRankColor c)]
+-- | 'colored' @color text@ wraps some text around SGR codes to display it in
+-- the given color.
+colored :: Color -> Text -> Text
+colored c s = T.concat
+    [ T.pack $ setSGRCode [SetColor Foreground Dull c]
     , s
     , T.pack $ setSGRCode [Reset]
     ]
+
+rankColored :: R.RankColor -> Text -> Text
+rankColored = colored . convertRankColor
 
 convertRankColor :: R.RankColor -> Color
 convertRankColor R.Gray   = White
@@ -362,6 +366,10 @@ convertRankColor R.Blue   = Blue
 convertRankColor R.Violet = Magenta
 convertRankColor R.Orange = Yellow
 convertRankColor R.Red    = Red
+
+-- | Prints an error in more user-friendly formatting
+printError :: String -> IO ()
+printError = T.putStrLn . colored Red . ("Error:\n" <>) . T.pack
 
 plainCell :: Text -> Cell
 plainCell = Cell [Reset]
@@ -377,7 +385,7 @@ ratingCell x =
     let color = convertRankColor $ rankColor $ getRank x
     in coloredCell color $ T.pack $ show x
 
--- | `differenceCell` @diff@ colors a number red, white or green, depending on
+-- | 'differenceCell' @diff@ colors a number red, white or green, depending on
 -- whether it's negative, 0, or positive.
 differenceCell :: Int -> Cell
 differenceCell x
