@@ -3,6 +3,7 @@
 module Main where
 
 import Codeforces.Contest
+import Codeforces.Config
 import Codeforces.Party
 import Codeforces.Problem
 import Codeforces.Rank hiding (RankColor(..))
@@ -13,6 +14,7 @@ import Codeforces.Submission
 import Codeforces.User
 
 import Commands
+import Config
 
 import Control.Monad.Extra
 import Control.Monad.Trans.Class
@@ -33,13 +35,22 @@ import Table
 main :: IO ()
 main = do
     command <- parseCommands
+    config  <- loadConfig
+
     case command of
+        -- List/tabulate data
         ContestsCmd opts      -> contestList opts
         ProblemsCmd opts      -> problemList opts
         StandingsCmd cId opts -> standingsList cId opts
+
+        -- User-related commands
         UserCmd    h          -> userInfo h
         RatingsCmd h          -> userRatings h
         StatusCmd h opts      -> userStatus h opts
+        FriendsCmd            -> userFriends config
+
+        -- Setup config file
+        SetupCmd              -> setupConfig
 
 --------------------------------------------------------------------------------
 
@@ -341,6 +352,14 @@ verdictCell testset passed points (Just v) = case v of
                 , showText currTest
                 ]
         in coloredCell clr text
+
+--------------------------------------------------------------------------------
+
+userFriends :: UserConfig -> IO ()
+userFriends cfg = getFriends cfg >>= either printError printFriends
+
+printFriends :: [Handle] -> IO ()
+printFriends = mapM_ T.putStrLn
 
 --------------------------------------------------------------------------------
 

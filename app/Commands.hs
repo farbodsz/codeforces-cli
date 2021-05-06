@@ -17,8 +17,10 @@ import Options.Applicative
 
 data Command
     = ContestsCmd ContestOpts
+    | FriendsCmd
     | ProblemsCmd ProblemOpts
     | RatingsCmd Handle
+    | SetupCmd
     | StandingsCmd Int StandingOpts
     | StatusCmd Handle StatusOpts
     | UserCmd Handle
@@ -65,11 +67,20 @@ commandP =
                "contests"
                (info contestsP (progDesc "Upcoming or past contests"))
         <> command
+               "friends"
+               (info
+                   friendsP
+                   (progDesc "List your friends (must be authenticated)")
+               )
+        <> command
                "problems"
                (info problemsP (progDesc "View and filter problem sets"))
         <> command
                "ratings"
                (info ratingsP (progDesc "Rating changes of a user"))
+        <> command
+               "setup"
+               (info setupP (progDesc "Setup your configuration file"))
         <> command
                "standings"
                (info standingsP (progDesc "Standings table of a contest"))
@@ -93,6 +104,9 @@ contestsP =
                 (long "past" <> short 'p' <> help
                     "Displays past contests instead of upcoming contests."
                 )
+
+friendsP :: Parser Command
+friendsP = pure FriendsCmd
 
 problemsP :: Parser Command
 problemsP =
@@ -119,6 +133,9 @@ problemsP =
 
 ratingsP :: Parser Command
 ratingsP = RatingsCmd <$> handleArg
+
+setupP :: Parser Command
+setupP = pure SetupCmd
 
 standingsP :: Parser Command
 standingsP =

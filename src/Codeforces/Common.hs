@@ -2,7 +2,10 @@
 
 module Codeforces.Common
     ( getData
+    , getAuthorizedData
     ) where
+
+import Codeforces.Config
 
 import Data.Aeson
 
@@ -17,7 +20,7 @@ instance FromJSON CodeforcesStatus where
     parseJSON = withText "CodeforcesStatus"
         $ \t -> pure $ if t == "OK" then Ok else Failed
 
--- | `CodeforcesResponse` represents the JSON object returned by a GET request
+-- | 'CodeforcesResponse' represents the JSON object returned by a GET request
 -- to the Codeforces API.
 --
 -- It always contains a "status", and one of "result" or "comment" depending on
@@ -33,7 +36,7 @@ instance FromJSON a => FromJSON (CodeforcesResponse a) where
             Ok     -> ResponseOk <$> o .: "result"
             Failed -> ResponseFail <$> o .: "comment"
 
--- | `codeforcesDecode` @response@ decodes the JSON object returned by the API.
+-- | 'codeforcesDecode' @response@ decodes the JSON object returned by the API.
 -- If the call "FAILED" with a given comment, @Left@ is returned, otherwise
 -- @Right@ with the result object.
 codeforcesDecode :: FromJSON a => CodeforcesResponse a -> Either String a
@@ -46,7 +49,7 @@ codeforcesDecode (ResponseOk   x) = Right x
 baseUrl :: String
 baseUrl = "https://codeforces.com/api"
 
--- | `getData` @path query@ is a general function for returning some result data
+-- | 'getData' @path query@ is a general function for returning some result data
 -- from the Codeforces API.
 getData :: FromJSON a => String -> Query -> IO (Either String a)
 getData path query = do
@@ -55,5 +58,11 @@ getData path query = do
 
     response <- httpJSON request
     pure $ codeforcesDecode $ getResponseBody response
+
+-- | 'getAuthorizedData' @config path query@ requests and returnsn some result
+-- data that requires authorization.
+getAuthorizedData
+    :: FromJSON a => UserConfig -> String -> Query -> IO (Either String a)
+getAuthorizedData cfg p q = generateRequestParams cfg p q >>= getData p
 
 --------------------------------------------------------------------------------

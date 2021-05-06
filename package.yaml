@@ -22,8 +22,13 @@ description:
 dependencies:
   - base >= 4.7 && < 5
   - aeson
+  - base16-bytestring
   - bytestring
+  - cryptohash-sha512
+  - directory
   - http-conduit
+  - http-types
+  - random
   - text
   - time
   - transformers
