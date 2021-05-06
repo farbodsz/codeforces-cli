@@ -13,6 +13,7 @@ import Codeforces.Submission
 import Codeforces.User
 
 import Commands
+import Config
 
 import Control.Monad.Extra
 import Control.Monad.Trans.Class
@@ -33,6 +34,8 @@ import Table
 main :: IO ()
 main = do
     command <- parseCommands
+    -- config  <- loadConfig
+
     case command of
         ContestsCmd opts      -> contestList opts
         ProblemsCmd opts      -> problemList opts
