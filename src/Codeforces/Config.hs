@@ -9,6 +9,7 @@ module Codeforces.Config
 import qualified Crypto.Hash.SHA512 as SHA512
 
 import Data.Aeson
+import qualified Data.ByteString.Base16 as Base16
 import Data.ByteString.Char8 (ByteString)
 import qualified Data.ByteString.Char8 as BC
 import Data.Text (Text)
@@ -96,7 +97,7 @@ generateRequestParams UserConfig {..} path query = do
         [query, keyAndTimeParams cfgKey time, [("apiSig", Just apiSig)]]
 
 generateHash :: AuthQuery -> ByteString
-generateHash AuthQuery {..} = SHA512.hash $ BC.concat
+generateHash AuthQuery {..} = Base16.encode $ SHA512.hash $ BC.concat
     [ BC.pack (show aqRand)
     , BC.pack aqMethodName
     , renderQuery True $ aqOriginalQuery ++ keyAndTimeParams aqKey aqTime
