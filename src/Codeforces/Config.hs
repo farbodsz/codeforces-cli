@@ -44,6 +44,10 @@ instance FromJSON UserConfig where
     parseJSON = withObject "Config" $ \v ->
         UserConfig <$> (v .: "handle") <*> (v .: "key") <*> (v .: "secret")
 
+instance ToJSON UserConfig where
+    toJSON UserConfig {..} =
+        object ["handle" .= cfgHandle, "key" .= cfgKey, "secret" .= cfgSecret]
+
 --------------------------------------------------------------------------------
 
 -- | Contains the data needed to make an authorized GET request.

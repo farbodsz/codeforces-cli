@@ -43,6 +43,7 @@ main = do
         UserCmd    h          -> userInfo h
         RatingsCmd h          -> userRatings h
         StatusCmd h opts      -> userStatus h opts
+        SetupCmd -> setupConfig
 
 --------------------------------------------------------------------------------
 

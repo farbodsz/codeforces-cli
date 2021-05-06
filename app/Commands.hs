@@ -19,6 +19,7 @@ data Command
     = ContestsCmd ContestOpts
     | ProblemsCmd ProblemOpts
     | RatingsCmd Handle
+    | SetupCmd
     | StandingsCmd Int StandingOpts
     | StatusCmd Handle StatusOpts
     | UserCmd Handle
@@ -71,6 +72,9 @@ commandP =
                "ratings"
                (info ratingsP (progDesc "Rating changes of a user"))
         <> command
+               "setup"
+               (info setupP (progDesc "Setup your configuration file"))
+        <> command
                "standings"
                (info standingsP (progDesc "Standings table of a contest"))
         <> command
@@ -119,6 +123,9 @@ problemsP =
 
 ratingsP :: Parser Command
 ratingsP = RatingsCmd <$> handleArg
+
+setupP :: Parser Command
+setupP = pure SetupCmd
 
 standingsP :: Parser Command
 standingsP =
