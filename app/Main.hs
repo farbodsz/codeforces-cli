@@ -68,7 +68,7 @@ printContests cs = forM_ (makeTable headers rows) T.putStrLn
     rows    = map
         (\Contest {..} ->
             plainCell
-                <$> [ T.pack $ show contestId
+                <$> [ showText contestId
                     , contestName
                     , fmtStartTime contestStartTime
                     , fmtDuration contestDuration
@@ -95,9 +95,7 @@ printProblems ps = forM_ (makeTable headers rows) T.putStrLn
     headers = [("#", 6), ("Name", 40), ("Rating", 6)]
     rows    = map
         (\Problem {..} ->
-            [ plainCell
-                $  maybe "" (T.pack . show) problemContestId
-                <> problemIndex
+            [ plainCell $ maybe "" showText problemContestId <> problemIndex
             , plainCell problemName
             , maybe blankCell ratingCell problemRating
             ]
@@ -228,9 +226,7 @@ printRatings User {..} = do
     T.putStrLn $ T.concat
         [ indent
         , "Rating:       "
-        , rankColored
-            (rankColor (getRank userRating))
-            (T.pack $ show userRating)
+        , rankColored (rankColor (getRank userRating)) (showText userRating)
         ]
     let maxRank = getRank userRating
     T.putStrLn $ T.concat
@@ -238,7 +234,7 @@ printRatings User {..} = do
         , "              (max: "
         , rankColored
             (rankColor maxRank)
-            (T.concat [rankName maxRank, ", ", T.pack $ show userMaxRating])
+            (T.concat [rankName maxRank, ", ", showText userMaxRating])
         , ")"
         ]
 
@@ -389,14 +385,14 @@ blankCell = plainCell ""
 ratingCell :: Int -> Cell
 ratingCell x =
     let color = convertRankColor $ rankColor $ getRank x
-    in coloredCell color $ T.pack $ show x
+    in coloredCell color (showText x)
 
 -- | 'differenceCell' @diff@ colors a number red, white or green, depending on
 -- whether it's negative, 0, or positive.
 differenceCell :: Int -> Cell
 differenceCell x
-    | x > 0     = coloredCell Green $ T.concat ["+", T.pack $ show x]
-    | x == 0    = plainCell $ T.concat [" ", T.pack $ show x]
-    | otherwise = coloredCell Red $ T.pack $ show x
+    | x > 0     = coloredCell Green $ "+" <> showText x
+    | x == 0    = plainCell $ " " <> showText x
+    | otherwise = coloredCell Red $ showText x
 
 --------------------------------------------------------------------------------
