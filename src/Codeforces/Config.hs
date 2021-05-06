@@ -6,8 +6,6 @@ module Codeforces.Config
     , generateRequestParams
     ) where
 
-import Codeforces.User (Handle)
-
 import qualified Crypto.Hash.SHA512 as SHA512
 
 import Data.Aeson
@@ -34,7 +32,7 @@ import System.Random
 -- this configuration.
 --
 data UserConfig = UserConfig
-    { cfgHandle :: Handle   -- ^ Codeforces handle of the user
+    { cfgHandle :: Text     -- ^ Codeforces handle of the user
     , cfgKey    :: Text     -- ^ First part of the API key
     , cfgSecret :: Text     -- ^ Second part of the API key
     }
@@ -61,7 +59,8 @@ data AuthQuery = AuthQuery
     , aqRand          :: Int
     }
 
--- | Returns a query string with extra parameters for authorized access.
+-- | 'generateRequestParams' @config path query@ returns a query string with
+-- extra query items that are generated to allow for authorized access.
 --
 -- The parameters are of the form:
 -- @

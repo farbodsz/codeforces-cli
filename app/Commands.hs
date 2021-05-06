@@ -17,6 +17,7 @@ import Options.Applicative
 
 data Command
     = ContestsCmd ContestOpts
+    | FriendsCmd
     | ProblemsCmd ProblemOpts
     | RatingsCmd Handle
     | SetupCmd
@@ -66,6 +67,12 @@ commandP =
                "contests"
                (info contestsP (progDesc "Upcoming or past contests"))
         <> command
+               "friends"
+               (info
+                   friendsP
+                   (progDesc "List your friends (must be authenticated)")
+               )
+        <> command
                "problems"
                (info problemsP (progDesc "View and filter problem sets"))
         <> command
@@ -97,6 +104,9 @@ contestsP =
                 (long "past" <> short 'p' <> help
                     "Displays past contests instead of upcoming contests."
                 )
+
+friendsP :: Parser Command
+friendsP = pure FriendsCmd
 
 problemsP :: Parser Command
 problemsP =
