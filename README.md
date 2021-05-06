@@ -2,7 +2,7 @@
 
 Command line interface to interact with Codeforces.
 
-[![asciicast](https://asciinema.org/a/NMBUtxiz9JRnqql5LTKw47LE2.svg)](https://asciinema.org/a/NMBUtxiz9JRnqql5LTKw47LE2)
+![demo](https://github.com/farbodsz/codeforces-cli/blob/master/docs/demo.gif?raw=true)
 
 ## Commands
 
