@@ -6,10 +6,13 @@ import Codeforces.Common
 import Codeforces.Contest (Contest)
 import Codeforces.Party (Party)
 import Codeforces.Problem (Points, Problem)
+import Codeforces.User (Handle)
 
 import Data.Aeson
 import qualified Data.ByteString.Char8 as BC
 import Data.Time
+import qualified Data.Text as T
+import qualified Data.Text.Encoding as T
 
 --------------------------------------------------------------------------------
 
@@ -20,6 +23,7 @@ data ResultType
     -- | Means a party can only increase points for this problem by submitting
     -- better solutions.
     | ResultFinal
+    deriving Show
 
 instance FromJSON ResultType where
     parseJSON = withText "ResultType" $ \case
@@ -37,6 +41,7 @@ data ProblemResult = ProblemResult
     -- that brought maximal amount of points for this problem. 
     , prBestSubmissionTime   :: Maybe Int
     }
+    deriving Show
 
 -- | True if no solution has been submitted for this problem in the contest.
 prNotAttempted :: ProblemResult -> Bool
@@ -64,6 +69,7 @@ data RanklistRow = RanklistRow
     -- some points to the total score of the party. For IOI contests only.
     , rrLastSubmissionTime    :: Maybe DiffTime
     }
+    deriving Show
 
 instance FromJSON RanklistRow where
     parseJSON = withObject "RanklistRow" $ \v ->
@@ -87,6 +93,7 @@ data Standings = Standings
     , standingsProblems :: [Problem]
     , standingsRanklist :: [RanklistRow]
     }
+    deriving Show
 
 instance FromJSON Standings where
     parseJSON =
@@ -105,14 +112,16 @@ getContestStandings
     -> Int            -- ^ number of standing rows to return
     -> Maybe Int      -- ^ if specified, only standings of the room are returned
     -> Bool           -- ^ if false, only @Contestant@ participations returned
+    -> Maybe [Handle] -- ^ if specified, the list of handles to show
     -> IO (Either String Standings)
-getContestStandings cId from count mroom unofficial = getData
+getContestStandings cId from count mroom unofficial hs = getData
     "/contest.standings"
     [ ("contestId"     , asArg cId)
     , ("from"          , asArg from)
     , ("count"         , asArg count)
     , ("room"          , BC.pack . show <$> mroom)
     , ("showUnofficial", asArg unofficial)
+    , ("handles"       , T.encodeUtf8 . T.intercalate ";" <$> hs)
     ]
   where
     asArg :: Show a => a -> Maybe BC.ByteString

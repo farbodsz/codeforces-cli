@@ -22,6 +22,7 @@ data RatingChange = RatingChange
     , rcOldRating        :: Int
     , rcNewRating        :: Int
     }
+    deriving Show
 
 instance FromJSON RatingChange where
     parseJSON = withObject "RatingChange" $ \v ->

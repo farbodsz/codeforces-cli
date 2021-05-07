@@ -82,6 +82,7 @@ data ProblemsResponse = ProblemsResponse
     { prProblems :: [Problem]
     , prStats    :: [ProblemStats]
     }
+    deriving Show
 
 instance FromJSON ProblemsResponse where
     parseJSON =
