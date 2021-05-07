@@ -41,7 +41,7 @@ main = do
         -- List/tabulate data
         ContestsCmd opts      -> contestList opts
         ProblemsCmd opts      -> problemList opts
-        StandingsCmd cId opts -> standingsList cId opts
+        StandingsCmd cId opts -> standingsList cId config opts
 
         -- User-related commands
         UserCmd    h          -> userInfo h
@@ -115,18 +115,23 @@ printProblems ps = forM_ (makeTable headers rows) T.putStrLn
 
 --------------------------------------------------------------------------------
 
-standingsList :: Int -> StandingOpts -> IO ()
-standingsList cId opts =
-    runExceptT (printStandings cId opts) >>= either printError pure
+standingsList :: Int -> UserConfig -> StandingOpts -> IO ()
+standingsList cId cfg opts =
+    runExceptT (printStandings cId cfg opts) >>= either printError pure
 
-printStandings :: Int -> StandingOpts -> ExceptT String IO ()
-printStandings cId StandingOpts {..} = do
+printStandings :: Int -> UserConfig -> StandingOpts -> ExceptT String IO ()
+printStandings cId cfg StandingOpts {..} = do
+    friends <- ExceptT $ getFriends cfg
+    let mhs = if optFriends then Just (cfgHandle cfg : friends) else Nothing
+
     ss <- ExceptT $ getContestStandings
         cId
         optFromIndex
         optRowCount
         optRoom
         optShowUnofficial
+        mhs
+
     let rl = standingsRanklist ss
 
     if null rl

@@ -43,6 +43,7 @@ data StandingOpts = StandingOpts
     , optFromIndex      :: Int
     , optRowCount       :: Int
     , optRoom           :: Maybe Int
+    , optFriends        :: Bool
     }
     deriving Eq
 
@@ -165,6 +166,13 @@ standingOpts =
                     <> metavar "INT"
                     )
                 )
+        <*> switch
+                (  long "friends"
+                <> short 'f'
+                <> help
+                       "If true then only you and your friends will be shown\
+                           \ in the standings."
+                )
 
 statusP :: Parser Command
 statusP = StatusCmd <$> handleArg <*> statusOpts
@@ -184,7 +192,7 @@ fromOpt :: Parser Int
 fromOpt = option
     auto
     (  long "from"
-    <> short 'f'
+    <> short 'i'
     <> help "1-based index of the row to start from."
     <> showDefault
     <> value 1
