@@ -128,8 +128,12 @@ printStandings cId StandingOpts {..} = do
         optRoom
         optShowUnofficial
     let rl = standingsRanklist ss
-    us <- standingsUsers rl
-    lift $ forM_ (standingsTable ss us) T.putStrLn
+
+    if null rl
+        then lift $ printError "Standings empty."
+        else do
+            us <- standingsUsers rl
+            lift $ forM_ (standingsTable ss us) T.putStrLn
 
 -- | 'standingsUsers' @rows@ returns a map of 'User's included in the standings.
 standingsUsers :: [RanklistRow] -> ExceptT String IO (M.Map Handle User)
