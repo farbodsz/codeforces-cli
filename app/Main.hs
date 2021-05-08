@@ -152,7 +152,7 @@ standingsUsers rrs = do
 standingsTable :: Standings -> M.Map Handle User -> Table
 standingsTable s us = makeTable headers rows
   where
-    headers = [("#", 10), ("Who", 25), ("=", totalPointsColW), ("*", 5)]
+    headers = [("#", 5), ("Who", 20), ("=", totalPointsColW), ("*", 5)]
         ++ map (\p -> (problemIndex p, problemColW)) (standingsProblems s)
     rows = map
         (\RanklistRow {..} ->
@@ -168,7 +168,7 @@ standingsTable s us = makeTable headers rows
     scoringType     = contestType $ standingsContest s
 
     -- Final score in ICPC contest is number of problems solved (single digit)
-    totalPointsColW = if scoringType == ScoringICPC then 2 else 6
+    totalPointsColW = if scoringType == ScoringICPC then 2 else 5
     -- Problem score in ICPC contest is only 2-3 chars wide (e.g. "+5", "-2")
     problemColW     = if scoringType == ScoringICPC then 3 else 5
 
