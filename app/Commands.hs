@@ -63,7 +63,7 @@ opts = info (commandP <**> helper) (header "Codeforces CLI" <> fullDesc)
 
 commandP :: Parser Command
 commandP =
-    subparser
+    hsubparser
         $  command
                "contests"
                (info contestsP (progDesc "Upcoming or past contests"))
