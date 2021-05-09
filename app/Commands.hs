@@ -3,6 +3,7 @@
 module Commands
     ( Command(..)
     , ContestOpts(..)
+    , InfoOpts(..)
     , ProblemOpts(..)
     , StandingOpts(..)
     , StatusOpts(..)
@@ -18,7 +19,7 @@ import Options.Applicative
 data Command
     = ContestsCmd ContestOpts
     | FriendsCmd
-    | InfoCmd Int
+    | InfoCmd Int InfoOpts
     | ProblemsCmd ProblemOpts
     | RatingsCmd Handle
     | SetupCmd
@@ -30,6 +31,11 @@ data Command
 data ContestOpts = ContestOpts
     { optIsGym  :: Bool
     , optIsPast :: Bool
+    }
+    deriving Eq
+
+data InfoOpts = InfoOpts
+    { optHandle :: Maybe Handle
     }
     deriving Eq
 
@@ -116,7 +122,20 @@ contestsP =
                 )
 
 contestInfoP :: Parser Command
-contestInfoP = InfoCmd <$> contestIdArg
+contestInfoP = InfoCmd <$> contestIdArg <*> contestInfoOpts
+
+contestInfoOpts :: Parser InfoOpts
+contestInfoOpts = InfoOpts <$> optional
+    (strOption
+        (  long "user"
+        <> short 'u'
+        <> help
+               "Codeforces user handle. If specified, it shows the contest details\
+            \ of another user. If not specified, your contest details will be\
+            \ shown."
+        <> metavar "HANDLE"
+        )
+    )
 
 friendsP :: Parser Command
 friendsP = pure FriendsCmd

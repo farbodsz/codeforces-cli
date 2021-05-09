@@ -23,6 +23,7 @@ import Control.Monad.Trans.Except
 import Data.Function (on)
 import Data.List (sortBy)
 import qualified Data.Map as M
+import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
@@ -42,7 +43,7 @@ main = do
     case command of
         -- List/tabulate data
         ContestsCmd opts      -> contestList opts
-        InfoCmd     cId       -> contestInfo cId config
+        InfoCmd cId opts      -> contestInfo cId config opts
         ProblemsCmd opts      -> problemList opts
         StandingsCmd cId opts -> standingsList cId config opts
 
@@ -95,14 +96,16 @@ printContests cs = forM_ (makeTable headers rows) T.putStrLn
 
 --------------------------------------------------------------------------------
 
-contestInfo :: Int -> UserConfig -> IO ()
-contestInfo cId cfg =
-    runExceptT (printContestInfo cId cfg) >>= either printError pure
+contestInfo :: Int -> UserConfig -> InfoOpts -> IO ()
+contestInfo cId cfg opts =
+    runExceptT (printContestInfo cId cfg opts) >>= either printError pure
 
-printContestInfo :: Int -> UserConfig -> ExceptT String IO ()
-printContestInfo cId cfg = do
+printContestInfo :: Int -> UserConfig -> InfoOpts -> ExceptT String IO ()
+printContestInfo cId cfg opts = do
+    let handle = fromMaybe (cfgHandle cfg) (optHandle opts)
+
     allPs <- ExceptT $ getProblems []
-    allSs <- ExceptT $ getContestSubmissions cId (cfgHandle cfg)
+    allSs <- ExceptT $ getContestSubmissions cId handle
 
     let ps     = contestProblems cId allPs
     let subMap = contestSubmissions allSs
