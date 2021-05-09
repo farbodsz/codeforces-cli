@@ -3,4 +3,4 @@ cradle:
     - path: "./src"
       component: "codeforces-cli:lib"
     - path: "./app"
-      component: "codeforces-cli:exe:cf-cli"
+      component: "codeforces-cli:exe:cf"

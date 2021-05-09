@@ -45,7 +45,7 @@ library:
     - -Wall
 
 executables:
-  cf-cli:
+  cf:
     main: Main.hs
     source-dirs: app
     ghc-options:
