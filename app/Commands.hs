@@ -18,6 +18,7 @@ import Options.Applicative
 data Command
     = ContestsCmd ContestOpts
     | FriendsCmd
+    | InfoCmd Int
     | ProblemsCmd ProblemOpts
     | RatingsCmd Handle
     | SetupCmd
@@ -68,6 +69,14 @@ commandP =
                "contests"
                (info contestsP (progDesc "Upcoming or past contests"))
         <> command
+               "info"
+               (info
+                   contestInfoP
+                   (progDesc
+                       "Show the problems and your problem results of a contest"
+                   )
+               )
+        <> command
                "friends"
                (info
                    friendsP
@@ -106,6 +115,9 @@ contestsP =
                     "Displays past contests instead of upcoming contests."
                 )
 
+contestInfoP :: Parser Command
+contestInfoP = InfoCmd <$> contestIdArg
+
 friendsP :: Parser Command
 friendsP = pure FriendsCmd
 
@@ -139,8 +151,7 @@ setupP :: Parser Command
 setupP = pure SetupCmd
 
 standingsP :: Parser Command
-standingsP =
-    StandingsCmd <$> argument auto (metavar "CONTEST_ID") <*> standingOpts
+standingsP = StandingsCmd <$> contestIdArg <*> standingOpts
 
 standingOpts :: Parser StandingOpts
 standingOpts =
@@ -187,6 +198,9 @@ userP = UserCmd <$> handleArg
 
 handleArg :: Parser Handle
 handleArg = argument str (metavar "HANDLE" <> help "Codeforces user handle.")
+
+contestIdArg :: Parser Int
+contestIdArg = argument auto (metavar "CONTEST_ID" <> help "ID of the contest")
 
 fromOpt :: Parser Int
 fromOpt = option

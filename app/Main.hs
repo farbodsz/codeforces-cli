@@ -20,6 +20,8 @@ import Control.Monad.Extra
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.Except
 
+import Data.Function (on)
+import Data.List (sortBy)
 import qualified Data.Map as M
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -40,6 +42,7 @@ main = do
     case command of
         -- List/tabulate data
         ContestsCmd opts      -> contestList opts
+        InfoCmd     cId       -> contestInfo cId config
         ProblemsCmd opts      -> problemList opts
         StandingsCmd cId opts -> standingsList cId config opts
 
@@ -89,6 +92,52 @@ printContests cs = forM_ (makeTable headers rows) T.putStrLn
     fmtStartTime =
         maybe "" (T.pack . formatTime defaultTimeLocale "%H:%M  %d-%b-%y")
     fmtDuration = T.pack . formatTime defaultTimeLocale "%h:%0M hrs"
+
+--------------------------------------------------------------------------------
+
+contestInfo :: Int -> UserConfig -> IO ()
+contestInfo cId cfg =
+    runExceptT (printContestInfo cId cfg) >>= either printError pure
+
+printContestInfo :: Int -> UserConfig -> ExceptT String IO ()
+printContestInfo cId cfg = do
+    allPs <- ExceptT $ getProblems []
+    allSs <- ExceptT $ getContestSubmissions cId (cfgHandle cfg)
+
+    let ps     = contestProblems cId allPs
+    let subMap = contestSubmissions allSs
+
+    lift $ printContestInfoTable ps subMap
+
+contestProblems :: Int -> [Problem] -> [Problem]
+contestProblems cId = sortBy (compare `on` problemIndex)
+    . filter ((Just cId ==) . problemContestId)
+
+contestSubmissions :: [Submission] -> M.Map ProblemIndex Submission
+contestSubmissions ss =
+    let pairs = map (\s -> (problemIndex (submissionProblem s), s)) ss
+    in M.fromListWith (const id) pairs
+
+printContestInfoTable :: [Problem] -> M.Map ProblemIndex Submission -> IO ()
+printContestInfoTable ps subMap = forM_ (makeTable headers rows) T.putStrLn
+  where
+    headers =
+        [("#", 1), ("Problem", 30), ("Verdict", 35), ("Time", 7), ("Memory", 8)]
+    rows = map
+        (\Problem {..} ->
+            let mSub = M.lookup problemIndex subMap
+            in
+                [ plainCell problemIndex
+                , plainCell problemName
+                , contestSubmissionCell mSub
+                , plainCell $ maybeTimeTaken mSub
+                , plainCell $ maybeMemTaken mSub
+                ]
+        )
+        ps
+
+    maybeTimeTaken = maybe "" (fmtTimeConsumed . submissionTimeConsumed)
+    maybeMemTaken  = maybe "" (fmtMemoryConsumed . submissionMemoryConsumed)
 
 --------------------------------------------------------------------------------
 
@@ -318,49 +367,19 @@ printSubmissions ss = forM_ (makeTable headers rows) T.putStrLn
                 submissionPassedTestCount
                 submissionPoints
                 submissionVerdict
-            , plainCell $ showText submissionTimeConsumed <> " ms"
-            , plainCell $ fmtMemory submissionMemoryConsumed
+            , plainCell $ fmtTimeConsumed submissionTimeConsumed
+            , plainCell $ fmtMemoryConsumed submissionMemoryConsumed
             ]
         )
         ss
     fmtTime = T.pack . formatTime defaultTimeLocale "%b/%d %H:%M"
-    fmtProblem Problem {..} = T.concat [problemIndex, " - ", problemName]
-    fmtMemory x = showText (x `div` 1000) <> " KB"
+    fmtProblem p = T.concat [problemIndex p, " - ", problemName p]
 
--- | 'verdictCell' @testset passedTestCount points verdict@ returns a cell
--- displaying the status of a submission, such as "Accepted" or "Wrong answer on
--- pretest 2".
-verdictCell :: Testset -> Int -> Maybe Points -> Maybe Verdict -> Cell
-verdictCell _       _      _      Nothing  = plainCell "In queue"
-verdictCell testset passed points (Just v) = case v of
-    Ok -> case testset of
-        Tests      -> coloredCell Green "Accepted"
-        Samples    -> coloredCell Green "Samples passed"
-        Pretests   -> coloredCell Green "Pretests passed"
-        Challenges -> coloredCell Green "Challenges passed"
-    Partial -> coloredCell Yellow $ maybe
-        "Partial result"
-        (\pts -> T.concat ["Partial result: ", showText pts, " points"])
-        points
-    Challenged              -> coloredCell Red "Hacked"
-    CompilationError        -> plainCell $ verdictText v
-    Skipped                 -> plainCell $ verdictText v
-    SecurityViolated        -> plainCell $ verdictText v
-    Crashed                 -> plainCell $ verdictText v
-    InputPreparationCrashed -> plainCell $ verdictText v
-    Rejected                -> plainCell $ verdictText v
-    _ ->
-        let
-            currTest = passed + 1
-            clr      = if v == Testing then White else Blue
-            text     = T.concat
-                [ verdictText v
-                , " on "
-                , T.toLower . T.init $ showText testset
-                , " "
-                , showText currTest
-                ]
-        in coloredCell clr text
+fmtTimeConsumed :: Int -> Text
+fmtTimeConsumed x = showText x <> " ms"
+
+fmtMemoryConsumed :: Int -> Text
+fmtMemoryConsumed x = showText (x `div` 1000) <> " KB"
 
 --------------------------------------------------------------------------------
 
@@ -422,5 +441,49 @@ differenceCell x
     | x > 0     = coloredCell Green $ "+" <> showText x
     | x == 0    = plainCell $ " " <> showText x
     | otherwise = coloredCell Red $ showText x
+
+-- | 'verdictCell' @testset passedTestCount points verdict@ returns a cell
+-- displaying the status of a submission, such as "Accepted" or "Wrong answer on
+-- pretest 2".
+verdictCell :: Testset -> Int -> Maybe Points -> Maybe Verdict -> Cell
+verdictCell _       _      _      Nothing  = plainCell "In queue"
+verdictCell testset passed points (Just v) = case v of
+    Ok -> case testset of
+        Tests      -> coloredCell Green "Accepted"
+        Samples    -> coloredCell Green "Samples passed"
+        Pretests   -> coloredCell Green "Pretests passed"
+        Challenges -> coloredCell Green "Challenges passed"
+    Partial -> coloredCell Yellow $ maybe
+        "Partial result"
+        (\pts -> T.concat ["Partial result: ", showText pts, " points"])
+        points
+    Challenged              -> coloredCell Red "Hacked"
+    CompilationError        -> plainCell $ verdictText v
+    Skipped                 -> plainCell $ verdictText v
+    SecurityViolated        -> plainCell $ verdictText v
+    Crashed                 -> plainCell $ verdictText v
+    InputPreparationCrashed -> plainCell $ verdictText v
+    Rejected                -> plainCell $ verdictText v
+    _ ->
+        let
+            currTest = passed + 1
+            clr      = if v == Testing then White else Blue
+            text     = T.concat
+                [ verdictText v
+                , " on "
+                , T.toLower . T.init $ showText testset
+                , " "
+                , showText currTest
+                ]
+        in coloredCell clr text
+
+-- | Shows the verdict of a contest submission.
+contestSubmissionCell :: Maybe Submission -> Cell
+contestSubmissionCell Nothing                = plainCell "Not submitted"
+contestSubmissionCell (Just Submission {..}) = verdictCell
+    submissionTestset
+    submissionPassedTestCount
+    submissionPoints
+    submissionVerdict
 
 --------------------------------------------------------------------------------

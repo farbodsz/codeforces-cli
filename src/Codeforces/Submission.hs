@@ -58,7 +58,7 @@ instance FromJSON Verdict where
         "REJECTED"                  -> pure Rejected
         _                           -> fail "Invalid Verdict"
 
--- | `verdictText` @verdict@ returns a user-friendly text representation of the
+-- | 'verdictText' @verdict@ returns a user-friendly text representation of the
 -- Verdict.
 verdictText :: Verdict -> Text
 verdictText Failed                  = "Failed"
@@ -139,12 +139,24 @@ instance FromJSON Submission where
 
 --------------------------------------------------------------------------------
 
--- | `getUserStatus` @handle from count@ returns the @count@ most recent
+-- | 'getContestSubmissions' @contestId handle @ returns the submissions made by
+-- the user in the contest given by @contestId@
+getContestSubmissions :: Int -> Handle -> IO (Either String [Submission])
+getContestSubmissions cId h = getData
+    "/contest.status"
+    [("contestId", intArg cId), ("handle", handleArg h)]
+
+-- | 'getUserStatus' @handle from count@ returns the @count@ most recent
 -- submissions by the user, starting from the @from@-th one.
 getUserStatus :: Handle -> Int -> Int -> IO (Either String [Submission])
 getUserStatus h f n = getData
     "/user.status"
-    [("handle", Just $ T.encodeUtf8 h), ("from", intArg f), ("count", intArg n)]
-    where intArg = Just . BC.pack . show
+    [("handle", handleArg h), ("from", intArg f), ("count", intArg n)]
+
+handleArg :: Handle -> Maybe BC.ByteString
+handleArg = Just . T.encodeUtf8
+
+intArg :: Int -> Maybe BC.ByteString
+intArg = Just . BC.pack . show
 
 --------------------------------------------------------------------------------

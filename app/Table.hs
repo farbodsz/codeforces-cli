@@ -2,6 +2,7 @@
 
 module Table
     ( Cell(..)
+    , Row
     , Table
     , makeTable
     ) where
