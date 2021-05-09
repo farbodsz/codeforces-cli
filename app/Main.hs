@@ -33,6 +33,8 @@ import System.Console.ANSI
 
 import Table
 
+import Web.Browser (openBrowser)
+
 --------------------------------------------------------------------------------
 
 main :: IO ()
@@ -53,8 +55,9 @@ main = do
         StatusCmd h opts      -> userStatus h opts
         FriendsCmd            -> userFriends config
 
-        -- Setup config file
+        -- Miscellaneous
         SetupCmd              -> setupConfig
+        OpenCmd cId           -> openContest cId
 
 --------------------------------------------------------------------------------
 
@@ -174,6 +177,14 @@ printContestInfoTable ps subMap statMap = forM_
     maybeTimeTaken = maybe "" (fmtTimeConsumed . submissionTimeConsumed)
     maybeMemTaken  = maybe "" (fmtMemoryConsumed . submissionMemoryConsumed)
     maybeSolved    = maybe "" (("x" <>) . showText . pStatSolvedCount)
+
+--------------------------------------------------------------------------------
+
+-- | 'openContest' @contestId@ opens the URL to the specified contest in the
+-- user's preferred web browser.
+openContest :: Int -> IO ()
+openContest cId =
+    openBrowser ("https://codeforces.com/contest/" <> show cId) >> pure ()
 
 --------------------------------------------------------------------------------
 

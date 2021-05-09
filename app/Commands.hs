@@ -20,6 +20,7 @@ data Command
     = ContestsCmd ContestOpts
     | FriendsCmd
     | InfoCmd Int InfoOpts
+    | OpenCmd Int
     | ProblemsCmd ProblemOpts
     | RatingsCmd Handle
     | SetupCmd
@@ -89,6 +90,9 @@ commandP =
                    (progDesc "List your friends (must be authenticated)")
                )
         <> command
+               "open"
+               (info openP (progDesc "Open a contest in the browser"))
+        <> command
                "problems"
                (info problemsP (progDesc "View and filter problem sets"))
         <> command
@@ -139,6 +143,9 @@ contestInfoOpts = InfoOpts <$> optional
 
 friendsP :: Parser Command
 friendsP = pure FriendsCmd
+
+openP :: Parser Command
+openP = OpenCmd <$> contestIdArg
 
 problemsP :: Parser Command
 problemsP =
