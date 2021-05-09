@@ -104,43 +104,76 @@ printContestInfo :: Int -> UserConfig -> InfoOpts -> ExceptT String IO ()
 printContestInfo cId cfg opts = do
     let handle = fromMaybe (cfgHandle cfg) (optHandle opts)
 
-    allPs <- ExceptT $ getProblems []
+    pr    <- ExceptT $ getAllProblemData []
     allSs <- ExceptT $ getContestSubmissions cId handle
 
-    let ps     = contestProblems cId allPs
-    let subMap = contestSubmissions allSs
+    let ps      = contestProblems cId (prProblems pr)
+    let statMap = contestStats cId (prStats pr)
+    let subMap  = contestSubmissions allSs
 
-    lift $ printContestInfoTable ps subMap
+    lift $ printContestInfoTable ps subMap statMap
 
+-- | 'contestProblems' @contestId@ returns the problems in contest, sorted by
+-- problem index ascending.
 contestProblems :: Int -> [Problem] -> [Problem]
 contestProblems cId = sortBy (compare `on` problemIndex)
     . filter ((Just cId ==) . problemContestId)
 
+-- | contestStats @contestId stats@ computes all problems in the contest with
+-- @contestId@ returns a map of each contest problem's index to its statistics.
+contestStats :: Int -> [ProblemStats] -> M.Map ProblemIndex ProblemStats
+contestStats cId stats =
+    let
+        inContest = filter ((Just cId ==) . pStatContestId) stats
+        pairs     = map (\x -> (pStatProblemIndex x, x)) inContest
+    in M.fromList pairs
+
+-- | 'contestSubmissions' @submissions@ computes a map of each problem's index
+-- to the most recent submission for it.
 contestSubmissions :: [Submission] -> M.Map ProblemIndex Submission
 contestSubmissions ss =
     let pairs = map (\s -> (problemIndex (submissionProblem s), s)) ss
     in M.fromListWith (const id) pairs
 
-printContestInfoTable :: [Problem] -> M.Map ProblemIndex Submission -> IO ()
-printContestInfoTable ps subMap = forM_ (makeTable headers rows) T.putStrLn
+-- | 'printContestInfoTable' @problems submissions statistics@ prints a table
+-- of problems in this contest, each of which with the problem statistics, and
+-- if the user has made a submission, their submission verdict for the problem.
+printContestInfoTable
+    :: [Problem]
+    -> M.Map ProblemIndex Submission
+    -> M.Map ProblemIndex ProblemStats
+    -> IO ()
+printContestInfoTable ps subMap statMap = forM_
+    (makeTable headers rows)
+    T.putStrLn
   where
     headers =
-        [("#", 1), ("Problem", 30), ("Verdict", 35), ("Time", 7), ("Memory", 8)]
+        [ ("#"      , 1)
+        , ("Problem", 30)
+        , ("Verdict", 35)
+        , ("Time"   , 7)
+        , ("Memory" , 8)
+        , ("Solved" , 7)
+        ]
     rows = map
         (\Problem {..} ->
-            let mSub = M.lookup problemIndex subMap
+            let
+                mSub   = M.lookup problemIndex subMap
+                mStats = M.lookup problemIndex statMap
             in
                 [ plainCell problemIndex
                 , plainCell problemName
                 , contestSubmissionCell mSub
                 , plainCell $ maybeTimeTaken mSub
                 , plainCell $ maybeMemTaken mSub
+                , plainCell $ maybeSolved mStats
                 ]
         )
         ps
 
     maybeTimeTaken = maybe "" (fmtTimeConsumed . submissionTimeConsumed)
     maybeMemTaken  = maybe "" (fmtMemoryConsumed . submissionMemoryConsumed)
+    maybeSolved    = maybe "" (("x" <>) . showText . pStatSolvedCount)
 
 --------------------------------------------------------------------------------
 

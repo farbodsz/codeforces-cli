@@ -1,15 +1,6 @@
 --------------------------------------------------------------------------------
 
-module Codeforces.Problem
-    ( ProblemIndex
-    , Points
-    , ProblemTag
-    , ProblemType(..)
-    , Problem(..)
-    , ProblemStats(..)
-    , getProblems
-    , getProblemStats
-    ) where
+module Codeforces.Problem where
 
 import Codeforces.Common
 
@@ -93,7 +84,7 @@ instance FromJSON ProblemsResponse where
                       <$> (v .: "problems")
                       <*> (v .: "problemStatistics")
 
--- | 'getAllProblemData' @tags@ returns a 'ProblemResponse' filtered by the
+-- | 'getAllProblemData' @tags@ returns a 'ProblemsResponse' filtered by the
 -- @tags@, if supplied.
 getAllProblemData :: [ProblemTag] -> IO (Either String ProblemsResponse)
 getAllProblemData ts = getData "/problemset.problems" [("tags", tags)]
@@ -107,10 +98,5 @@ getAllProblemData ts = getData "/problemset.problems" [("tags", tags)]
 -- provided.
 getProblems :: [ProblemTag] -> IO (Either String [Problem])
 getProblems ts = fmap prProblems <$> getAllProblemData ts
-
--- | 'getProblemStats' @tags@ returns a list of 'ProblemStats's containing the
--- @tags@, if provided.
-getProblemStats :: [ProblemTag] -> IO (Either String [ProblemStats])
-getProblemStats ts = fmap prStats <$> getAllProblemData ts
 
 --------------------------------------------------------------------------------
