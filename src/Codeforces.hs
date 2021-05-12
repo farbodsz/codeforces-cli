@@ -142,6 +142,7 @@ getUser h = fmap head <$> getUsers [h]
 
 -- | 'getUsers' @handles@ returns a list of 'User's with the given @handles@
 getUsers :: [Handle] -> IO (Either ResponseError [User])
+getUsers [] = pure $ Right []
 getUsers hs = getData "/user.info" [("handles", argHandles hs)]
 
 -- 'getFriends' @config@ returns the handles of the friends of the currently
