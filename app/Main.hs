@@ -95,7 +95,8 @@ contestInfo :: Int -> UserConfig -> InfoOpts -> IO ()
 contestInfo cId cfg opts =
     runExceptT (printContestInfo cId cfg opts) >>= either printError pure
 
-printContestInfo :: Int -> UserConfig -> InfoOpts -> ExceptT ResponseError IO ()
+printContestInfo
+    :: Int -> UserConfig -> InfoOpts -> ExceptT ResponseError IO ()
 printContestInfo cId cfg opts = do
     let handle = fromMaybe (cfgHandle cfg) (optHandle opts)
 
@@ -222,7 +223,12 @@ printStandings cId cfg StandingOpts {..} = do
         , paramHandles    = mHs
         }
 
-    lift $ forM_ (standingsTable ss us) T.putStrLn
+    lift $ if null us
+        then if optFriends
+            then putStrLn
+                "Neither you nor your friends participated in this contest."
+            else putStrLn "Standings empty."
+        else forM_ (standingsTable ss us) T.putStrLn
 
 standingsTable :: Standings -> M.Map Handle User -> Table
 standingsTable s us = makeTable headers rows
