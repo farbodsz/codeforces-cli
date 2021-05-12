@@ -14,6 +14,8 @@ module Codeforces
     -- * Contests
     , getContests
     , getContestStandings
+    , getContestStandingsWithUsers
+    , StandingsParams(..)
 
     -- * Problems
     , getAllProblemData
@@ -46,7 +48,10 @@ import Codeforces.Standings
 import Codeforces.Submission
 import Codeforces.User
 
+import Control.Monad.Trans.Except
+
 import qualified Data.ByteString.Char8 as BC
+import qualified Data.Map as M
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 
@@ -55,25 +60,52 @@ import qualified Data.Text.Encoding as T
 getContests :: Bool -> IO (Either ResponseError [Contest])
 getContests isGym = getData "/contest.list" [("gym", argBool isGym)]
 
--- | 'getContestStandings' @contestId from count@ returns information about the
+-- | Contains query parameters for retrieving contest standings.
+data StandingsParams = StandingsParams
+    {
+    -- | ID of the contest
+      paramContestId  :: Int
+    -- | The starting index of the ranklist (1-based)
+    , paramFrom       :: Int
+    -- | The number of standing rows to return
+    , paramRowCount   :: Int
+    -- | If specified, only standings of this room are returned
+    , paramRoom       :: Maybe Int
+    -- | If true, all participations are included. Otherwise only 'Contestant'
+    -- participations are included.
+    , paramUnofficial :: Bool
+    -- | If specified, the standings includes only these users.
+    , paramHandles    :: Maybe [Handle]
+    }
+    deriving Show
+
+-- | 'getContestStandings' @standingsParams@ returns information about the
 -- contest and a part of the standings list.
-getContestStandings
-    :: Int            -- ^ ID of the contest
-    -> Int            -- ^ the starting index of the ranklist (1-based)
-    -> Int            -- ^ number of standing rows to return
-    -> Maybe Int      -- ^ if specified, only standings of the room are returned
-    -> Bool           -- ^ if false, only @Contestant@ participations returned
-    -> Maybe [Handle] -- ^ if specified, the list of handles to show
-    -> IO (Either ResponseError Standings)
-getContestStandings cId from count mroom unofficial hs = getData
+getContestStandings :: StandingsParams -> IO (Either ResponseError Standings)
+getContestStandings StandingsParams {..} = getData
     "/contest.standings"
-    [ ("contestId"     , argInt cId)
-    , ("from"          , argInt from)
-    , ("count"         , argInt count)
-    , ("room"          , argInt =<< mroom)
-    , ("showUnofficial", argBool unofficial)
-    , ("handles"       , T.encodeUtf8 . T.intercalate ";" <$> hs)
+    [ ("contestId"     , argInt paramContestId)
+    , ("from"          , argInt paramFrom)
+    , ("count"         , argInt paramRowCount)
+    , ("room"          , argInt =<< paramRoom)
+    , ("showUnofficial", argBool paramUnofficial)
+    , ("handles", T.encodeUtf8 . T.intercalate ";" <$> paramHandles)
     ]
+
+-- | Like 'getContestStandings' but returns the standings and a map of users in
+-- the standings list.
+getContestStandingsWithUsers
+    :: StandingsParams
+    -> IO (Either ResponseError (Standings, M.Map Handle User))
+getContestStandingsWithUsers q = runExceptT $ do
+    ss <- ExceptT $ getContestStandings q
+    let rl      = standingsRanklist ss
+    let handles = concatMap (map memberHandle . partyMembers . rrParty) rl
+
+    us <- ExceptT $ getUsers handles
+    let uMap = M.fromList $ zip handles us
+
+    pure (ss, uMap)
 
 -- | 'getContestSubmissions' @contestId handle@ returns the submissions made by
 -- the user in the contest given by @contestId@

@@ -53,10 +53,6 @@ main = do
 
 --------------------------------------------------------------------------------
 
-type Codeforces a = ExceptT ResponseError IO a
-
---------------------------------------------------------------------------------
-
 contestList :: ContestOpts -> IO ()
 contestList ContestOpts {..} = do
     contests <- getContests optIsGym
@@ -99,7 +95,7 @@ contestInfo :: Int -> UserConfig -> InfoOpts -> IO ()
 contestInfo cId cfg opts =
     runExceptT (printContestInfo cId cfg opts) >>= either printError pure
 
-printContestInfo :: Int -> UserConfig -> InfoOpts -> Codeforces ()
+printContestInfo :: Int -> UserConfig -> InfoOpts -> ExceptT ResponseError IO ()
 printContestInfo cId cfg opts = do
     let handle = fromMaybe (cfgHandle cfg) (optHandle opts)
 
@@ -211,35 +207,22 @@ standingsList :: Int -> UserConfig -> StandingOpts -> IO ()
 standingsList cId cfg opts =
     runExceptT (printStandings cId cfg opts) >>= either printError pure
 
-printStandings :: Int -> UserConfig -> StandingOpts -> Codeforces ()
+printStandings
+    :: Int -> UserConfig -> StandingOpts -> ExceptT ResponseError IO ()
 printStandings cId cfg StandingOpts {..} = do
     friends <- ExceptT $ getFriends cfg
-    let mhs = if optFriends then Just (cfgHandle cfg : friends) else Nothing
+    let mHs = if optFriends then Just (cfgHandle cfg : friends) else Nothing
 
-    ss <- ExceptT $ getContestStandings
-        cId
-        optFromIndex
-        optRowCount
-        optRoom
-        optShowUnofficial
-        mhs
+    (ss, us) <- ExceptT $ getContestStandingsWithUsers StandingsParams
+        { paramContestId  = cId
+        , paramFrom       = optFromIndex
+        , paramRowCount   = optRowCount
+        , paramRoom       = optRoom
+        , paramUnofficial = optShowUnofficial
+        , paramHandles    = mHs
+        }
 
-    let rl = standingsRanklist ss
-
-    if null rl
-        then lift $ putStrLn "Standings empty."
-        else do
-            us <- standingsUsers rl
-            lift $ forM_ (standingsTable ss us) T.putStrLn
-
--- | 'standingsUsers' @rows@ returns a map of 'User's included in the standings.
-standingsUsers :: [RanklistRow] -> Codeforces (M.Map Handle User)
-standingsUsers rrs = do
-    us <- ExceptT $ getUsers handles
-    pure $ M.fromList $ zip handles us
-  where
-    handles :: [Handle]
-    handles = concatMap (map memberHandle . partyMembers . rrParty) rrs
+    lift $ forM_ (standingsTable ss us) T.putStrLn
 
 standingsTable :: Standings -> M.Map Handle User -> Table
 standingsTable s us = makeTable headers rows
