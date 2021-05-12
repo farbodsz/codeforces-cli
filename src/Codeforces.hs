@@ -165,7 +165,9 @@ argText :: T.Text -> Maybe BC.ByteString
 argText = Just . T.encodeUtf8
 
 argTexts :: [T.Text] -> Maybe BC.ByteString
-argTexts = argText . T.intercalate ";"
+argTexts xs
+    | null xs   = Nothing
+    | otherwise = (Just . T.encodeUtf8 . T.intercalate ";") xs
 
 argHandle :: Handle -> Maybe BC.ByteString
 argHandle = argText
@@ -177,6 +179,6 @@ argInt :: Int -> Maybe BC.ByteString
 argInt = Just . BC.pack . show
 
 argTags :: [ProblemTag] -> Maybe BC.ByteString
-argTags ts = if null ts then Nothing else argTexts ts
+argTags = argTexts
 
 --------------------------------------------------------------------------------
