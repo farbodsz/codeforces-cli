@@ -2,12 +2,10 @@
 
 module Codeforces.RatingChange where
 
-import Codeforces.Common
 import Codeforces.User (Handle)
 
 import Data.Aeson
 import Data.Text (Text)
-import qualified Data.Text.Encoding as T
 import Data.Time
 import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
 
@@ -34,12 +32,5 @@ instance FromJSON RatingChange where
             <*> (posixSecondsToUTCTime <$> (v .: "ratingUpdateTimeSeconds"))
             <*> (v .: "oldRating")
             <*> (v .: "newRating")
-
---------------------------------------------------------------------------------
-
--- | `getUserRatingHistory` @handle@ returns a list of @RatingChange@s for the
--- requested user
-getUserRatingHistory :: Handle -> IO (Either String [RatingChange])
-getUserRatingHistory h = getData "/user.rating" [("handle", Just (T.encodeUtf8 h))]
 
 --------------------------------------------------------------------------------
