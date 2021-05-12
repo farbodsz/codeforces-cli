@@ -144,7 +144,7 @@ printContestInfoTable ps subMap statMap = forM_
     T.putStrLn
   where
     headers =
-        [ ("#"      , 1)
+        [ ("#"      , 2)
         , ("Problem", 30)
         , ("Verdict", 35)
         , ("Time"   , 7)
@@ -167,8 +167,8 @@ printContestInfoTable ps subMap statMap = forM_
         )
         ps
 
-    maybeTimeTaken = maybe "" (fmtTimeConsumed . submissionTimeConsumed)
-    maybeMemTaken  = maybe "" (fmtMemoryConsumed . submissionMemoryConsumed)
+    maybeTimeTaken = maybe "-" (fmtTimeConsumed . submissionTimeConsumed)
+    maybeMemTaken  = maybe "-" (fmtMemoryConsumed . submissionMemoryConsumed)
     maybeSolved    = maybe "" (("x" <>) . showText . pStatSolvedCount)
 
 --------------------------------------------------------------------------------
@@ -511,7 +511,7 @@ verdictCell testset passed points (Just v) = case v of
 
 -- | Shows the verdict of a contest submission.
 contestSubmissionCell :: Maybe Submission -> Cell
-contestSubmissionCell Nothing                = plainCell "Not submitted"
+contestSubmissionCell Nothing                = plainCell "-"
 contestSubmissionCell (Just Submission {..}) = verdictCell
     submissionTestset
     submissionPassedTestCount
