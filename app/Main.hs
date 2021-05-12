@@ -2,17 +2,8 @@
 
 module Main where
 
-import Codeforces.Common
-import Codeforces.Contest
-import Codeforces.Config
-import Codeforces.Party
-import Codeforces.Problem
-import Codeforces.Rank hiding (RankColor(..))
+import Codeforces hiding (RankColor(..))
 import qualified Codeforces.Rank as R
-import Codeforces.RatingChange
-import Codeforces.Standings
-import Codeforces.Submission
-import Codeforces.User
 
 import Commands
 import Config

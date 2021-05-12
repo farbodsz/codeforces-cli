@@ -2,10 +2,7 @@
 
 module Codeforces.Contest where
 
-import Codeforces.Common
-
 import Data.Aeson
-import qualified Data.ByteString.Char8 as BC
 import Data.Text (Text)
 import Data.Time
 import Data.Time.Clock.POSIX
@@ -58,11 +55,5 @@ instance FromJSON Contest where
             <*> (v .: "frozen")
             <*> (secondsToDiffTime <$> durationSeconds)
             <*> (fmap posixSecondsToUTCTime <$> startTimePosix)
-
---------------------------------------------------------------------------------
-
-getContests :: Bool -> IO (Either ResponseError [Contest])
-getContests isGym =
-    getData "/contest.list" [("gym", Just (BC.pack $ show isGym))]
 
 --------------------------------------------------------------------------------

@@ -2,16 +2,12 @@
 
 module Codeforces.Submission where
 
-import Codeforces.Common
 import Codeforces.Party (Party)
 import Codeforces.Problem (Points, Problem)
-import Codeforces.User (Handle)
 
 import Data.Aeson
-import qualified Data.ByteString.Char8 as BC
 import Data.Text (Text)
 import qualified Data.Text as T
-import qualified Data.Text.Encoding as T
 import Data.Time
 import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
 
@@ -136,28 +132,5 @@ instance FromJSON Submission where
             <*> (v .: "timeConsumedMillis")
             <*> (v .: "memoryConsumedBytes")
             <*> (v .:? "points")
-
---------------------------------------------------------------------------------
-
--- | 'getContestSubmissions' @contestId handle @ returns the submissions made by
--- the user in the contest given by @contestId@
-getContestSubmissions
-    :: Int -> Handle -> IO (Either ResponseError [Submission])
-getContestSubmissions cId h = getData
-    "/contest.status"
-    [("contestId", intArg cId), ("handle", handleArg h)]
-
--- | 'getUserStatus' @handle from count@ returns the @count@ most recent
--- submissions by the user, starting from the @from@-th one.
-getUserStatus :: Handle -> Int -> Int -> IO (Either ResponseError [Submission])
-getUserStatus h f n = getData
-    "/user.status"
-    [("handle", handleArg h), ("from", intArg f), ("count", intArg n)]
-
-handleArg :: Handle -> Maybe BC.ByteString
-handleArg = Just . T.encodeUtf8
-
-intArg :: Int -> Maybe BC.ByteString
-intArg = Just . BC.pack . show
 
 --------------------------------------------------------------------------------
