@@ -44,18 +44,18 @@ instance FromJSON User where
 --------------------------------------------------------------------------------
 
 -- | 'getUser' @handle@ returns the @User@ with the given @handle@
-getUser :: Handle -> IO (Either String User)
+getUser :: Handle -> IO (Either ResponseError User)
 getUser h = fmap head <$> getUsers [h]
 
 -- | 'getUsers' @handles@ returns a list of @User@s with the given @handles@
-getUsers :: [Handle] -> IO (Either String [User])
+getUsers :: [Handle] -> IO (Either ResponseError [User])
 getUsers hs = getData
     "/user.info"
     [("handles", Just $ T.encodeUtf8 $ T.intercalate ";" hs)]
 
 -- 'getFriends' @config@ returns the handles of the friends of the currently
 -- authenticated user.
-getFriends :: UserConfig -> IO (Either String [Handle])
+getFriends :: UserConfig -> IO (Either ResponseError [Handle])
 getFriends cfg = getAuthorizedData cfg "/user.friends" []
 
 --------------------------------------------------------------------------------

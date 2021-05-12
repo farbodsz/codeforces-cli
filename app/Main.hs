@@ -2,6 +2,7 @@
 
 module Main where
 
+import Codeforces.Common
 import Codeforces.Contest
 import Codeforces.Config
 import Codeforces.Party
@@ -61,6 +62,10 @@ main = do
 
 --------------------------------------------------------------------------------
 
+type Codeforces a = ExceptT ResponseError IO a
+
+--------------------------------------------------------------------------------
+
 contestList :: ContestOpts -> IO ()
 contestList ContestOpts {..} = do
     contests <- getContests optIsGym
@@ -103,7 +108,7 @@ contestInfo :: Int -> UserConfig -> InfoOpts -> IO ()
 contestInfo cId cfg opts =
     runExceptT (printContestInfo cId cfg opts) >>= either printError pure
 
-printContestInfo :: Int -> UserConfig -> InfoOpts -> ExceptT String IO ()
+printContestInfo :: Int -> UserConfig -> InfoOpts -> Codeforces ()
 printContestInfo cId cfg opts = do
     let handle = fromMaybe (cfgHandle cfg) (optHandle opts)
 
@@ -215,7 +220,7 @@ standingsList :: Int -> UserConfig -> StandingOpts -> IO ()
 standingsList cId cfg opts =
     runExceptT (printStandings cId cfg opts) >>= either printError pure
 
-printStandings :: Int -> UserConfig -> StandingOpts -> ExceptT String IO ()
+printStandings :: Int -> UserConfig -> StandingOpts -> Codeforces ()
 printStandings cId cfg StandingOpts {..} = do
     friends <- ExceptT $ getFriends cfg
     let mhs = if optFriends then Just (cfgHandle cfg : friends) else Nothing
@@ -231,13 +236,13 @@ printStandings cId cfg StandingOpts {..} = do
     let rl = standingsRanklist ss
 
     if null rl
-        then lift $ printError "Standings empty."
+        then lift $ putStrLn "Standings empty."
         else do
             us <- standingsUsers rl
             lift $ forM_ (standingsTable ss us) T.putStrLn
 
 -- | 'standingsUsers' @rows@ returns a map of 'User's included in the standings.
-standingsUsers :: [RanklistRow] -> ExceptT String IO (M.Map Handle User)
+standingsUsers :: [RanklistRow] -> Codeforces (M.Map Handle User)
 standingsUsers rrs = do
     us <- ExceptT $ getUsers handles
     pure $ M.fromList $ zip handles us
@@ -464,8 +469,8 @@ convertRankColor R.Orange = Yellow
 convertRankColor R.Red    = Red
 
 -- | Prints an error in more user-friendly formatting
-printError :: String -> IO ()
-printError = T.putStrLn . colored Red . ("Error:\n" <>) . T.pack
+printError :: ResponseError -> IO ()
+printError = T.putStrLn . colored Red . ("Error:\n" <>) . T.pack . show
 
 plainCell :: Text -> Cell
 plainCell = Cell [Reset]

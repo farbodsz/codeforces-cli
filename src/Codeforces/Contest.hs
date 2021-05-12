@@ -61,7 +61,7 @@ instance FromJSON Contest where
 
 --------------------------------------------------------------------------------
 
-getContests :: Bool -> IO (Either String [Contest])
+getContests :: Bool -> IO (Either ResponseError [Contest])
 getContests isGym =
     getData "/contest.list" [("gym", Just (BC.pack $ show isGym))]
 

@@ -1,7 +1,8 @@
 --------------------------------------------------------------------------------
 
 module Codeforces.Common
-    ( getData
+    ( ResponseError(..)
+    , getData
     , getAuthorizedData
     ) where
 
@@ -20,12 +21,12 @@ instance FromJSON CodeforcesStatus where
     parseJSON = withText "CodeforcesStatus"
         $ \t -> pure $ if t == "OK" then Ok else Failed
 
--- | 'CodeforcesResponse' represents the JSON object returned by a GET request
--- to the Codeforces API.
+-- | Represents the result object or error comment returned by the API.
 --
--- It always contains a "status", and one of "result" or "comment" depending on
--- whether a "OK" or "FAILED" is returned.
+-- Each successful response from the API contains a "status" field, and either
+-- a "result" or "comment" when status is "OK" or "FAILED" respectively.
 --
+-- These two possibilities are represented by 'ResponseOk' and 'ResponseFail'.
 data CodeforcesResponse a = ResponseFail String | ResponseOk a
     deriving Show
 
@@ -36,12 +37,22 @@ instance FromJSON a => FromJSON (CodeforcesResponse a) where
             Ok     -> ResponseOk <$> o .: "result"
             Failed -> ResponseFail <$> o .: "comment"
 
--- | 'codeforcesDecode' @response@ decodes the JSON object returned by the API.
--- If the call "FAILED" with a given comment, @Left@ is returned, otherwise
--- @Right@ with the result object.
-codeforcesDecode :: FromJSON a => CodeforcesResponse a -> Either String a
-codeforcesDecode (ResponseFail e) = Left e
-codeforcesDecode (ResponseOk   x) = Right x
+--------------------------------------------------------------------------------
+
+data ResponseError
+    = APIError String
+    | JSONError JSONException
+    deriving Show
+
+-- | Converts a possible 'CodeforcesResponse' into an either type.
+codeforcesDecode
+    :: FromJSON a
+    => Either JSONException (CodeforcesResponse a)
+    -> Either ResponseError a
+codeforcesDecode (Left  e1  ) = Left $ JSONError e1
+codeforcesDecode (Right resp) = case resp of
+    (ResponseFail e2 ) -> Left $ APIError e2
+    (ResponseOk   obj) -> Right obj
 
 --------------------------------------------------------------------------------
 
@@ -51,18 +62,22 @@ baseUrl = "https://codeforces.com/api"
 
 -- | 'getData' @path query@ is a general function for returning some result data
 -- from the Codeforces API.
-getData :: FromJSON a => String -> Query -> IO (Either String a)
+getData :: FromJSON a => String -> Query -> IO (Either ResponseError a)
 getData path query = do
     req <- parseRequest (baseUrl ++ path)
     let request = setRequestQueryString query req
 
-    response <- httpJSON request
+    response <- httpJSONEither request
     pure $ codeforcesDecode $ getResponseBody response
 
 -- | 'getAuthorizedData' @config path query@ requests and returnsn some result
 -- data that requires authorization.
 getAuthorizedData
-    :: FromJSON a => UserConfig -> String -> Query -> IO (Either String a)
+    :: FromJSON a
+    => UserConfig
+    -> String
+    -> Query
+    -> IO (Either ResponseError a)
 getAuthorizedData cfg p q = generateRequestParams cfg p q >>= getData p
 
 --------------------------------------------------------------------------------

@@ -39,7 +39,8 @@ instance FromJSON RatingChange where
 
 -- | `getUserRatingHistory` @handle@ returns a list of @RatingChange@s for the
 -- requested user
-getUserRatingHistory :: Handle -> IO (Either String [RatingChange])
-getUserRatingHistory h = getData "/user.rating" [("handle", Just (T.encodeUtf8 h))]
+getUserRatingHistory :: Handle -> IO (Either ResponseError [RatingChange])
+getUserRatingHistory h =
+    getData "/user.rating" [("handle", Just (T.encodeUtf8 h))]
 
 --------------------------------------------------------------------------------

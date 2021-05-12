@@ -86,7 +86,7 @@ instance FromJSON ProblemsResponse where
 
 -- | 'getAllProblemData' @tags@ returns a 'ProblemsResponse' filtered by the
 -- @tags@, if supplied.
-getAllProblemData :: [ProblemTag] -> IO (Either String ProblemsResponse)
+getAllProblemData :: [ProblemTag] -> IO (Either ResponseError ProblemsResponse)
 getAllProblemData ts = getData "/problemset.problems" [("tags", tags)]
   where
     tags =
@@ -96,7 +96,7 @@ getAllProblemData ts = getData "/problemset.problems" [("tags", tags)]
 
 -- | 'getProblems' @tags@ returns a list of 'Problem's containing the @tags@, if
 -- provided.
-getProblems :: [ProblemTag] -> IO (Either String [Problem])
+getProblems :: [ProblemTag] -> IO (Either ResponseError [Problem])
 getProblems ts = fmap prProblems <$> getAllProblemData ts
 
 --------------------------------------------------------------------------------

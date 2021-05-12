@@ -141,14 +141,15 @@ instance FromJSON Submission where
 
 -- | 'getContestSubmissions' @contestId handle @ returns the submissions made by
 -- the user in the contest given by @contestId@
-getContestSubmissions :: Int -> Handle -> IO (Either String [Submission])
+getContestSubmissions
+    :: Int -> Handle -> IO (Either ResponseError [Submission])
 getContestSubmissions cId h = getData
     "/contest.status"
     [("contestId", intArg cId), ("handle", handleArg h)]
 
 -- | 'getUserStatus' @handle from count@ returns the @count@ most recent
 -- submissions by the user, starting from the @from@-th one.
-getUserStatus :: Handle -> Int -> Int -> IO (Either String [Submission])
+getUserStatus :: Handle -> Int -> Int -> IO (Either ResponseError [Submission])
 getUserStatus h f n = getData
     "/user.status"
     [("handle", handleArg h), ("from", intArg f), ("count", intArg n)]

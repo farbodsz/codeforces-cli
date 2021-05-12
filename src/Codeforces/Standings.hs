@@ -113,7 +113,7 @@ getContestStandings
     -> Maybe Int      -- ^ if specified, only standings of the room are returned
     -> Bool           -- ^ if false, only @Contestant@ participations returned
     -> Maybe [Handle] -- ^ if specified, the list of handles to show
-    -> IO (Either String Standings)
+    -> IO (Either ResponseError Standings)
 getContestStandings cId from count mroom unofficial hs = getData
     "/contest.standings"
     [ ("contestId"     , asArg cId)
