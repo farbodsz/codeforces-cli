@@ -36,20 +36,21 @@ main = do
 
     case command of
         -- List/tabulate data
-        ContestsCmd opts      -> contestList opts
-        InfoCmd cId opts      -> contestInfo cId config opts
-        ProblemsCmd opts      -> problemList opts
-        StandingsCmd cId opts -> standingsList cId config opts
+        ContestsCmd opts         -> contestList opts
+        InfoCmd cId opts         -> contestInfo cId config opts
+        ProblemsCmd opts         -> problemList opts
+        StandingsCmd cId opts    -> standingsList cId config opts
 
         -- User-related commands
-        UserCmd    h          -> userInfo h
-        RatingsCmd h          -> userRatings h
-        StatusCmd h opts      -> userStatus h opts
-        FriendsCmd            -> userFriends config
+        UserCmd    h             -> userInfo h
+        RatingsCmd h             -> userRatings h
+        StatusCmd h opts         -> userStatus h opts
+        FriendsCmd               -> userFriends config
+        VirtualCmd cId h pts pen -> virtualRating cId h pts pen
 
         -- Miscellaneous
-        SetupCmd              -> setupConfig
-        OpenCmd cId           -> openContest cId
+        SetupCmd                 -> setupConfig
+        OpenCmd cId              -> openContest cId
 
 --------------------------------------------------------------------------------
 
@@ -420,6 +421,15 @@ userFriends cfg = getFriends cfg >>= either printError printFriends
 
 printFriends :: [Handle] -> IO ()
 printFriends = mapM_ T.putStrLn
+
+--------------------------------------------------------------------------------
+
+virtualRating :: Int -> Handle -> Points -> Int -> IO ()
+virtualRating cId h pts pen =
+    calculateVirtualDelta cId h pts pen >>= either printError printVirtualDelta
+
+printVirtualDelta :: Maybe Delta -> IO ()
+printVirtualDelta = print
 
 --------------------------------------------------------------------------------
 
