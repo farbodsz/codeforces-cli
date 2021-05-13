@@ -15,7 +15,7 @@ import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
 data Member = Member
     { memberHandle :: Handle
     }
-    deriving Show
+    deriving (Eq, Ord, Show)
 
 instance FromJSON Member where
     parseJSON = withObject "Member" $ \v -> Member <$> (v .: "handle")
@@ -26,7 +26,7 @@ data ParticipantType
     | Virtual
     | Manager
     | OutOfCompetition
-    deriving Show
+    deriving (Eq, Ord, Show)
 
 instance FromJSON ParticipantType where
     parseJSON = withText "ParticipantType" $ \case
@@ -48,7 +48,7 @@ data Party = Party
     , partyRoom            :: Maybe Int
     , partyStartTime       :: Maybe UTCTime
     }
-    deriving Show
+    deriving (Eq, Ord, Show)
 
 instance FromJSON Party where
     parseJSON = withObject "Party" $ \v ->
