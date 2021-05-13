@@ -34,6 +34,10 @@ module Codeforces
     , getUsers
     , getFriends
 
+    -- * Virtual rating calculation
+    , calculateVirtualDelta
+    , Delta
+
     -- * Configuration options
     , UserConfig(..)
     ) where
@@ -48,6 +52,7 @@ import Codeforces.RatingChange
 import Codeforces.Standings
 import Codeforces.Submission
 import Codeforces.User
+import Codeforces.Virtual
 
 import Control.Monad.Trans.Except
 
@@ -163,6 +168,35 @@ getUserStatus :: Handle -> Int -> Int -> IO (Either ResponseError [Submission])
 getUserStatus h f n = getData
     "/user.status"
     [("handle", argHandle h), ("from", argInt f), ("count", argInt n)]
+
+--------------------------------------------------------------------------------
+
+-- | calculateVirtualDelta @contestId handle points penalty@ computes the rating
+-- change the user would gain had they competed in the contest live.
+calculateVirtualDelta
+    :: Int -> Handle -> Points -> Int -> IO (Either ResponseError (Maybe Delta))
+calculateVirtualDelta cId handle points penalty = runExceptT $ do
+    rcs       <- ExceptT $ getContestRatingChanges cId
+
+    standings <- ExceptT $ getContestStandings $ StandingsParams
+        { paramContestId  = cId
+        , paramFrom       = Nothing
+        , paramRowCount   = Nothing
+        , paramRoom       = Nothing
+        , paramUnofficial = False
+        , paramHandles    = Nothing
+        }
+
+    user <- ExceptT $ getUser handle
+    let
+        vUser = VirtualUser
+            { vuHandle     = handle
+            , vuPoints     = points
+            , vuPenalty    = penalty
+            , vuCurrRating = userRating user
+            }
+
+    pure $ calculateVirtualRatingChange vUser rcs (standingsRanklist standings)
 
 --------------------------------------------------------------------------------
 
