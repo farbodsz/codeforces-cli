@@ -22,6 +22,7 @@ module Codeforces
     , getProblems
 
     -- * Ratings and ranks
+    , getContestRatingChanges
     , getUserRatingHistory
 
     -- * Problem submissions
@@ -128,6 +129,12 @@ getProblems :: [ProblemTag] -> IO (Either ResponseError [Problem])
 getProblems ts = fmap prProblems <$> getAllProblemData ts
 
 --------------------------------------------------------------------------------
+
+-- | 'getContestRatingChanges' @contestId@ returns a  list of 'RatingChange's
+-- for the contest.
+getContestRatingChanges :: Int -> IO (Either ResponseError [RatingChange])
+getContestRatingChanges cId =
+    getData "/contest.ratingChanges" [("contestId", argInt cId)]
 
 -- | 'getUserRatingHistory' @handle@ returns a list of 'RatingChange's for the
 -- requested user
