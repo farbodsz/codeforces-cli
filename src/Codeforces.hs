@@ -66,9 +66,9 @@ data StandingsParams = StandingsParams
     -- | ID of the contest
       paramContestId  :: Int
     -- | The starting index of the ranklist (1-based)
-    , paramFrom       :: Int
+    , paramFrom       :: Maybe Int
     -- | The number of standing rows to return
-    , paramRowCount   :: Int
+    , paramRowCount   :: Maybe Int
     -- | If specified, only standings of this room are returned
     , paramRoom       :: Maybe Int
     -- | If true, all participations are included. Otherwise only 'Contestant'
@@ -85,11 +85,11 @@ getContestStandings :: StandingsParams -> IO (Either ResponseError Standings)
 getContestStandings StandingsParams {..} = getData
     "/contest.standings"
     [ ("contestId"     , argInt paramContestId)
-    , ("from"          , argInt paramFrom)
-    , ("count"         , argInt paramRowCount)
+    , ("from"          , argInt =<< paramFrom)
+    , ("count"         , argInt =<< paramRowCount)
     , ("room"          , argInt =<< paramRoom)
     , ("showUnofficial", argBool paramUnofficial)
-    , ("handles", T.encodeUtf8 . T.intercalate ";" <$> paramHandles)
+    , ("handles"       , T.encodeUtf8 . T.intercalate ";" <$> paramHandles)
     ]
 
 -- | Like 'getContestStandings' but returns the standings and a map of users in

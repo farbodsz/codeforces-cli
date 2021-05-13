@@ -216,8 +216,8 @@ printStandings cId cfg StandingOpts {..} = do
 
     (ss, us) <- ExceptT $ getContestStandingsWithUsers StandingsParams
         { paramContestId  = cId
-        , paramFrom       = optFromIndex
-        , paramRowCount   = optRowCount
+        , paramFrom       = Just optFromIndex
+        , paramRowCount   = Just optRowCount
         , paramRoom       = optRoom
         , paramUnofficial = optShowUnofficial
         , paramHandles    = mHs
