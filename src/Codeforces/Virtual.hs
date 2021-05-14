@@ -71,18 +71,20 @@ mapOfPreviousRatings = M.fromList . map (liftA2 (,) rcHandle rcOldRating)
 -- | Builds an updated list of 'RanklistRow's for this contest by finding the
 -- virtual user's rank and including them in the list.
 virtualRankings :: VirtualUser -> [RanklistRow] -> [RanklistRow]
-virtualRankings _  []       = []
-virtualRankings vu (x : xs) = if shouldInsert vu (rrPoints x) (rrPenalty x)
-    then mkVirtualRow (rrRank x) vu : x : xs
-    else x : virtualRankings vu xs
+virtualRankings vu rrs = go rrs 1
   where
-    -- | Whether to insert the virtual user at this point in the ranklist rows.
-    shouldInsert VirtualUser {..} rowPoints rowPenalty
-        | vuPoints == rowPoints = vuPenalty <= rowPenalty
-        | otherwise             = vuPoints > rowPoints
+    go [] rank = [mkVirtualRow rank vu]
+    go (x : xs) _
+        | shouldInsert vu x = mkVirtualRow (rrRank x) vu : x : xs
+        | otherwise         = x : go xs (rrRank x + 1)
+
+    -- | Whether to insert the virtual user's row before the given row.
+    shouldInsert VirtualUser {..} RanklistRow {..} =
+        (vuPoints > rrPoints)
+            || (vuPoints == rrPoints && vuPenalty <= rrPenalty)
 
 -- | Constructs the virtual user's 'RanklistRow', using the virtual user's rank,
--- and their  contest results.
+-- and their contest results.
 mkVirtualRow :: Int -> VirtualUser -> RanklistRow
 mkVirtualRow virtualRank VirtualUser {..} = RanklistRow
     { rrParty                 = virtualParty
