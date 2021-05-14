@@ -38,11 +38,11 @@ virtualParty = Party
 
 -- | Represents the virtual participation of the user in this contest.
 data VirtualUser = VirtualUser
-    { vuHandle     :: Handle  -- ^ Identifies the user in the virtual contest.
-    , vuPoints     :: Points  -- ^ Points scored in the virtual contest.
+    { vuPoints     :: Points  -- ^ Points scored in the virtual contest.
     , vuPenalty    :: Int     -- ^ User's penalty in the virtual contest.
     , vuCurrRating :: Int     -- ^ Current rating of the user.
     }
+    deriving Show
 
 --------------------------------------------------------------------------------
 
@@ -57,14 +57,14 @@ calculateVirtualRatingChange vu@VirtualUser {..} rcs rrs = M.lookup
     virtualParty
     updatedDeltas
   where
-    previousRatings = M.insert vuHandle vuCurrRating (mapOfPreviousRatings rcs)
+    updatedDeltas   = calculateNewRatingChanges updatedRatings updatedRankings
+    updatedRatings  = M.insert virtualHandle vuCurrRating (previousRatings rcs)
     updatedRankings = virtualRankings vu rrs
-    updatedDeltas   = calculateNewRatingChanges previousRatings updatedRankings
 
--- | 'mapOfPreviousRatings' @ratingChanges@ returns a map of each user's handle
--- to their rating before the contest.
-mapOfPreviousRatings :: [RatingChange] -> M.Map Handle Int
-mapOfPreviousRatings = M.fromList . map (liftA2 (,) rcHandle rcOldRating)
+-- | 'previousRatings' @ratingChanges@ returns a map of each user's handle to
+-- their rating before the contest.
+previousRatings :: [RatingChange] -> M.Map Handle Int
+previousRatings = M.fromList . map (liftA2 (,) rcHandle rcOldRating)
 
 --------------------------------------------------------------------------------
 
@@ -131,7 +131,6 @@ calculateNewRatingChanges
 calculateNewRatingChanges hs rrs = process $ mkContestants hs rrs
 
 -- | Constructs a list of contestants from the previous ratings and rankings.
--- Each contestant's rank and delta is 0.
 mkContestants :: M.Map Handle Int -> [RanklistRow] -> [Contestant]
 mkContestants prevRatings = map
     (\RanklistRow {..} -> Contestant

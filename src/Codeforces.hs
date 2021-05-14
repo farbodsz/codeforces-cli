@@ -190,8 +190,7 @@ calculateVirtualDelta cId handle points penalty = runExceptT $ do
     user <- ExceptT $ getUser handle
     let
         vUser = VirtualUser
-            { vuHandle     = handle
-            , vuPoints     = points
+            { vuPoints     = points
             , vuPenalty    = penalty
             , vuCurrRating = userRating user
             }
