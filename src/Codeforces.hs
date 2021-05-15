@@ -171,10 +171,16 @@ getUserStatus h f n = getData
 
 --------------------------------------------------------------------------------
 
--- | calculateVirtualDelta @contestId handle points penalty@ computes the rating
--- change the user would gain had they competed in the contest live.
+-- | 'calculateVirtualDelta' @contestId handle points penalty@ computes the
+-- rating change the user would gain had they competed in the contest live.
+--
+-- Returns the user's /current/ rating and the rating delta.
 calculateVirtualDelta
-    :: Int -> Handle -> Points -> Int -> IO (Either ResponseError (Maybe Delta))
+    :: Int
+    -> Handle
+    -> Points
+    -> Int
+    -> IO (Either ResponseError (Int, Maybe Delta))
 calculateVirtualDelta cId handle points penalty = runExceptT $ do
     rcs       <- ExceptT $ getContestRatingChanges cId
 
@@ -188,14 +194,15 @@ calculateVirtualDelta cId handle points penalty = runExceptT $ do
         }
 
     user <- ExceptT $ getUser handle
-    let
-        vUser = VirtualUser
+    let vUser = VirtualUser
             { vuPoints     = points
             , vuPenalty    = penalty
             , vuCurrRating = userRating user
             }
+        delta =
+            calculateVirtualRatingChange vUser rcs (standingsRanklist standings)
 
-    pure $ calculateVirtualRatingChange vUser rcs (standingsRanklist standings)
+    pure (userRating user, delta)
 
 --------------------------------------------------------------------------------
 

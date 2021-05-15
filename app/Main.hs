@@ -428,8 +428,30 @@ virtualRating :: Int -> Handle -> Points -> Int -> IO ()
 virtualRating cId h pts pen =
     calculateVirtualDelta cId h pts pen >>= either printError printVirtualDelta
 
-printVirtualDelta :: Maybe Delta -> IO ()
-printVirtualDelta = print
+printVirtualDelta :: (Int, Maybe Delta) -> IO ()
+printVirtualDelta (_, Nothing) =
+    putStrLn
+        $  "An unexpected error occurred.\n"
+        ++ "Your rating change could not be calculated."
+printVirtualDelta (currRating, Just delta) = do
+    putStrLn ""
+    putStrLn "Rating change:"
+
+    let newRating = currRating + delta
+    let newRank   = getRank newRating
+
+    putStrLn $ concat ["  (", show currRating, " -> ", show newRating, ")"]
+    putStrLn ""
+
+    T.putStrLn $ T.concat ["  ", indent, diffColored delta]
+
+    putStrLn ""
+    T.putStrLn $ T.concat
+        [ "  "
+        , "Would remain "
+        , rankColored (rankColor newRank) (rankName newRank)
+        , "\n"
+        ]
 
 --------------------------------------------------------------------------------
 
@@ -483,6 +505,13 @@ differenceCell x
     | x > 0     = coloredCell Green $ "+" <> showText x
     | x == 0    = plainCell $ " " <> showText x
     | otherwise = coloredCell Red $ showText x
+
+-- | Like 'differenceCell' but returns a 'Text' rather than a 'Cell'.
+diffColored :: Int -> Text
+diffColored x
+    | x > 0     = colored Green $ "+" <> showText x
+    | x == 0    = " " <> showText x
+    | otherwise = colored Red $ showText x
 
 -- | 'verdictCell' @testset passedTestCount points verdict@ returns a cell
 -- displaying the status of a submission, such as "Accepted" or "Wrong answer on
