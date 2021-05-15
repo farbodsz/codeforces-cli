@@ -425,33 +425,46 @@ printFriends = mapM_ T.putStrLn
 --------------------------------------------------------------------------------
 
 virtualRating :: Int -> Handle -> Points -> Int -> IO ()
-virtualRating cId h pts pen =
+virtualRating cId h pts pen = do
     calculateVirtualDelta cId h pts pen >>= either printError printVirtualDelta
 
-printVirtualDelta :: (Int, Maybe Delta) -> IO ()
-printVirtualDelta (_, Nothing) =
+printVirtualDelta :: Maybe VirtualResult -> IO ()
+printVirtualDelta Nothing =
     putStrLn
         $  "An unexpected error occurred.\n"
         ++ "Your rating change could not be calculated."
-printVirtualDelta (currRating, Just delta) = do
+printVirtualDelta (Just VirtualResult {..}) = do
     putStrLn ""
     putStrLn "Rating change:"
 
-    let newRating = currRating + delta
-    let newRank   = getRank newRating
+    let currRating = userRating virtualUser
+    let currRank   = getRank currRating
+    let newRating  = currRating + virtualDelta
+    let newRank    = getRank newRating
 
     putStrLn $ concat ["  (", show currRating, " -> ", show newRating, ")"]
     putStrLn ""
 
-    T.putStrLn $ T.concat ["  ", indent, diffColored delta]
-
+    T.putStrLn $ T.concat ["  ", indent, diffColored virtualDelta]
     putStrLn ""
-    T.putStrLn $ T.concat
-        [ "  "
-        , "Would remain "
-        , rankColored (rankColor newRank) (rankName newRank)
-        , "\n"
-        ]
+
+    let
+        desc = if currRank == newRank
+            then T.concat
+                [ "Would remain "
+                , rankName currRank
+                , " "
+                , rankColored (rankColor currRank) (userHandle virtualUser)
+                ]
+            else T.concat
+                [ "Would become "
+                , rankName newRank
+                , ": "
+                , rankColored (rankColor currRank) (userHandle virtualUser)
+                , " -> "
+                , rankColored (rankColor newRank) (userHandle virtualUser)
+                ]
+    T.putStrLn $ T.concat ["  ", desc, "\n"]
 
 --------------------------------------------------------------------------------
 

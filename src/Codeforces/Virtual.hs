@@ -2,7 +2,9 @@
 
 module Codeforces.Virtual
     ( VirtualUser(..)
+    , VirtualResult(..)
     , Delta
+    , Seed
     , calculateVirtualRatingChange
     ) where
 

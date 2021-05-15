@@ -4,7 +4,7 @@ module Codeforces.Virtual.Types where
 
 import Codeforces.Party
 import Codeforces.Problem (Points)
-import Codeforces.User (Handle)
+import Codeforces.User
 
 --------------------------------------------------------------------------------
 
@@ -54,5 +54,12 @@ data Contestant = Contestant
     , contestantRating :: Int
     }
     deriving (Eq, Show)
+
+-- | A virtual participation result
+data VirtualResult = VirtualResult
+    { virtualUser  :: User
+    , virtualDelta :: Delta
+    }
+    deriving Show
 
 --------------------------------------------------------------------------------

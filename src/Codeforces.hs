@@ -37,6 +37,8 @@ module Codeforces
     -- * Virtual rating calculation
     , calculateVirtualDelta
     , Delta
+    , Seed
+    , VirtualResult(..)
 
     -- * Configuration options
     , UserConfig(..)
@@ -174,13 +176,14 @@ getUserStatus h f n = getData
 -- | 'calculateVirtualDelta' @contestId handle points penalty@ computes the
 -- rating change the user would gain had they competed in the contest live.
 --
--- Returns the user's /current/ rating and the rating delta.
+-- Returns the results of the virtual user, if available.
+--
 calculateVirtualDelta
     :: Int
     -> Handle
     -> Points
     -> Int
-    -> IO (Either ResponseError (Int, Maybe Delta))
+    -> IO (Either ResponseError (Maybe VirtualResult))
 calculateVirtualDelta cId handle points penalty = runExceptT $ do
     rcs       <- ExceptT $ getContestRatingChanges cId
 
@@ -202,7 +205,9 @@ calculateVirtualDelta cId handle points penalty = runExceptT $ do
         delta =
             calculateVirtualRatingChange vUser rcs (standingsRanklist standings)
 
-    pure (userRating user, delta)
+    pure $ case delta of
+        Nothing  -> Nothing
+        (Just d) -> Just $ VirtualResult user d
 
 --------------------------------------------------------------------------------
 

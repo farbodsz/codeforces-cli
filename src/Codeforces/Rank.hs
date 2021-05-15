@@ -3,6 +3,7 @@ module Codeforces.Rank where
 import Data.Text (Text)
 
 data RankColor = Gray | Green | Cyan | Blue | Violet | Orange | Red
+    deriving (Eq, Show)
 
 type RatingBounds = (Int, Int)
 
@@ -11,6 +12,7 @@ data Rank = Rank
     , rankColor  :: RankColor
     , rankBounds :: RatingBounds
     }
+    deriving (Eq, Show)
 
 -- | `ranks` is list of all Codeforces ranks
 ranks :: [Rank]
