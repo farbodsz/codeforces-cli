@@ -133,11 +133,44 @@ reassignRanks = go 1 . sortByPointsDesc
 
 -- | 'calculateDelta' @c cs@ computes the rating delta for contestant @c@ using
 -- a seed computed from all other contestants @cs@.
+--
+-- The rating change for a participant is the between the rating they require
+-- (according to their seed) and their current rating:
+--
+-- \[
+-- d_i = \frac{R - r_i}{2}
+-- \]
+--
 calculateDelta :: Contestant -> [Contestant] -> Delta
 calculateDelta c cs = (needRating - contestantRating c) `div` 2
+    where needRating = calculateNeedRating cs (midRank c cs)
+
+-- | Computes the geometric mean of a contestant's seed (expected ranking) and
+-- actual ranking.
+--
+-- This ranking is between the expected and actual ranking.
+--
+midRank :: Contestant -> [Contestant] -> Float
+midRank c cs = sqrt $ fromIntegral (contestantRank c) * calculateSeedOf c cs
+
+-- | Given a list of contestants and this contestant's 'midRank', calculates
+-- the rating a contestant should have to achieve their expected ranking, using
+-- binary search.
+--
+-- In other words, a rating:
+--
+-- \[
+-- R : seed_i = m_i
+-- \]
+--
+calculateNeedRating :: [Contestant] -> Float -> Int
+calculateNeedRating cs rank = go 1 8000
   where
-    midRank    = sqrt $ fromIntegral (contestantRank c) * calculateSeedOf c cs
-    needRating = calculateNeedRating cs midRank
+    go l r
+        | r - l <= 1 = l
+        | r - l > 1 && calculateSeed mid cs < rank = go l mid
+        | otherwise  = go mid r
+        where mid = (l + r) `div` 2
 
 -- | Calculates the seed of a contestant with the given rating, using the
 -- supplied list of all /other/ contestants.
@@ -184,17 +217,6 @@ calculateSeedOf x ys = calculateSeed (contestantRating x) (filter (/= x) ys)
 getEloWinProbability :: Int -> Int -> Float
 getEloWinProbability x y = 1 / (1 + 10 ** (diff / 400))
     where diff = fromIntegral (y - x)
-
--- | Calculates the rating needed by a contestant with the given rank using
--- binary search.
-calculateNeedRating :: [Contestant] -> Float -> Int
-calculateNeedRating cs rank = go 1 8000
-  where
-    go l r
-        | r - l <= 1 = l
-        | r - l > 1 && calculateSeed mid cs < rank = go l mid
-        | otherwise  = go mid r
-        where mid = (l + r) `div` 2
 
 --------------------------------------------------------------------------------
 -- Utility functions
