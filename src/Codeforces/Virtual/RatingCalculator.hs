@@ -87,9 +87,6 @@ adjustTopDeltas cs ds = M.map (+ inc) ds
     topCount     = 4 * (round' . sqrt . fromIntegral . M.size) ds
     round'       = round :: Double -> Int
 
-validateDeltas :: M.Map Party Delta -> M.Map Party Delta
-validateDeltas = id -- TODO
-
 -- | Computes the rating delta for each party in this contest.
 calculateDeltas :: [Contestant] -> M.Map Party Delta
 calculateDeltas cs = M.fromList $ map
