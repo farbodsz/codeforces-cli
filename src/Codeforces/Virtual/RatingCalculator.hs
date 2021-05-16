@@ -156,7 +156,7 @@ calculateDelta c cs = (needRating - contestantRating c) `div` 2
 --
 calculateSeed :: Int -> [Contestant] -> Seed
 calculateSeed rating others =
-    1 + sum [ getEloWinProbability rating (contestantRating x) | x <- others ]
+    1 + sum [ getEloWinProbability (contestantRating x) rating | x <- others ]
 
 -- | Helper function like 'calculateSeed' but takes a contestant and a list of
 -- all contestants.
@@ -176,8 +176,13 @@ calculateSeedOf x ys = calculateSeed (contestantRating x) (filter (/= x) ys)
 -- will win with probability ~0.75. If the difference is 400 then the stronger
 -- participant will win with probability ~0.9.
 --
+-- __Note:__ reversing the order of rating arguments reverses the result.
+--
 -- >>> getEloWinProbability 1400 1200
 -- 0.7597469
+--
+-- >>> getEloWinProbability 1200 1400
+-- 0.24025308
 --
 getEloWinProbability :: Int -> Int -> Float
 getEloWinProbability x y = 1 / (1 + 10 ** (diff / 400))
