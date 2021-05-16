@@ -9,8 +9,8 @@ import Codeforces.Standings
 import Codeforces.User (Handle)
 import Codeforces.Virtual.Types
 
-import qualified Data.Map as M
 import Data.List
+import qualified Data.Map as M
 import Data.Maybe
 
 --------------------------------------------------------------------------------
@@ -96,6 +96,18 @@ calculateDeltas cs = M.fromList $ map
 -- | Sorts and recomputes the rank of each contestant.
 --
 -- In this assignment, contestants with the same points have the same rank.
+-- Repeated ranks are disregarded when assigning ranks to contestants that
+-- score lower than them. For example:
+--
+-- @
+-- | Party | Points | Rank |
+-- | ----- | ------ | ---- |
+-- | A     | 2302.0 | 41   |
+-- | B     | 2302.0 | 41   |
+-- | C     | 2302.0 | 41   |
+-- | D     | 2256.0 | 44   |   <- rank is not 42, but 44
+-- | ...   | ...    | ...  |
+-- @
 --
 -- Reassigning ranks is required because the input list of contestants is not
 -- guaranteed to have correct ranks or be in the correct order following the
@@ -115,16 +127,15 @@ calculateDeltas cs = M.fromList $ map
 -- *VU = virtual user
 --
 reassignRanks :: [Contestant] -> [Contestant]
-reassignRanks = go 1 . sortByPointsDesc
+reassignRanks = go 1 1 . sortByPointsDesc
   where
-    go _    []  = []
-    go rank [c] = [withRank rank c]
-    go rank (c1 : c2 : cs) =
-        let
-            nextRank = if contestantPoints c2 < contestantPoints c1
-                then rank + 1
-                else rank
-        in withRank rank c1 : go nextRank (c2 : cs)
+    go _ _    []             = []
+    go _ rank [c           ] = [withRank rank c]
+    go i rank (c1 : c2 : cs) = withRank rank c1 : go (i + 1) nextRank (c2 : cs)
+      where
+        nextRank
+            | contestantPoints c2 < contestantPoints c1 = i + 1
+            | otherwise = rank
 
     withRank r c = c { contestantRank = r }
 
