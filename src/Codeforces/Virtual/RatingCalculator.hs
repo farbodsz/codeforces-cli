@@ -57,7 +57,23 @@ adjustAllDeltas :: M.Map Party Delta -> M.Map Party Delta
 adjustAllDeltas ds = M.map (+ inc) ds
     where inc = (negate (sum (M.elems ds)) `div` M.size ds) - 1
 
--- | Adjusts rating deltas to ensure that the sum of the top deltas is zero.
+-- | Adjusts rating deltas to prevent ratings of top competitors becoming
+-- inflated.
+--
+-- /Before/ the round, we choose a group of most highly rated competitors and
+-- decide that their /total/ rating shouldn't change. The size of this group is
+-- determined by the heuristic:
+--
+-- \[
+-- s = \min(n, 4 \sqrt{n})
+-- \]
+--
+-- The sum of deltas over this group is adjusted to make it 0:
+--
+-- \[
+-- r_i = r_i - \frac{\sum^s d_i}{s}
+-- \]
+--
 adjustTopDeltas :: [Contestant] -> M.Map Party Delta -> M.Map Party Delta
 adjustTopDeltas cs ds = M.map (+ inc) ds
   where
@@ -81,7 +97,26 @@ calculateDeltas cs = M.fromList $ map
     (reassignRanks cs)
 
 -- | Sorts and recomputes the rank of each contestant.
--- Contestants with the same points have the same rank.
+--
+-- In this assignment, contestants with the same points have the same rank.
+--
+-- Reassigning ranks is required because the input list of contestants is not
+-- guaranteed to have correct ranks or be in the correct order following the
+-- inclusion of the virtual user. E.g. the input list may resemble:
+--
+-- @
+-- | Party | Points | Rank |
+-- | ----- | ------ | ---- |
+-- | ...   | ...    | ...  |
+-- | A     | 2302.0 | 41   |
+-- | VU*   | 2300.0 | 42   |
+-- | B     | 2266.0 | 42   |   <- ranks from here on are incorrect
+-- | C     | 2256.0 | 43   |
+-- | ...   | ...    | ...  |
+-- @
+--
+-- *VU = virtual user
+--
 reassignRanks :: [Contestant] -> [Contestant]
 reassignRanks = go 1 . sortByPointsDesc
   where
@@ -114,6 +149,11 @@ calculateDelta c cs = (needRating - contestantRating c) `div` 2
 -- seed_i = \sum_{j=1, j \ne i}^{n} P_{j,i} + 1
 -- \]
 --
+-- 1 is added to account for 1-based rankings.
+--
+-- The general idea is to increase the contestant's rating if their actual
+-- ranking is better than their seed, and decrease if worse.
+--
 calculateSeed :: Int -> [Contestant] -> Seed
 calculateSeed rating others =
     1 + sum [ getEloWinProbability rating (contestantRating x) | x <- others ]
@@ -129,8 +169,15 @@ calculateSeedOf x ys = calculateSeed (contestantRating x) (filter (/= x) ys)
 -- the @y@th participant, given by:
 --
 -- \[
--- P_{i,j} = \frac{1}{1 + 10 \frac{r_j - r_i}{400}}
+-- P_{i,j} = \frac{1}{1 + 10^\frac{r_j - r_i}{400}}
 -- \]
+--
+-- E.g. if the difference between ratings is 200 then the stronger participant
+-- will win with probability ~0.75. If the difference is 400 then the stronger
+-- participant will win with probability ~0.9.
+--
+-- >>> getEloWinProbability 1400 1200
+-- 0.7597469
 --
 getEloWinProbability :: Int -> Int -> Float
 getEloWinProbability x y = 1 / (1 + 10 ** (diff / 400))
