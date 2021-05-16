@@ -9,6 +9,10 @@ import Codeforces.Standings
 import Codeforces.User (Handle)
 import Codeforces.Virtual.Types
 
+import Control.Monad
+import Control.Monad.Trans.Reader
+
+import Data.Functor ((<&>))
 import Data.List
 import qualified Data.Map as M
 import Data.Maybe
@@ -16,7 +20,7 @@ import Data.Maybe
 --------------------------------------------------------------------------------
 
 -- | 'calculateNewRatingChanges' @previousRatings updatedRankings@ computes a
--- map of rating deltas for each user that take into account the virtual user's
+-- map of rating deltas for each user, taking into account the virtual user's
 -- participation.
 calculateNewRatingChanges
     :: M.Map Handle Int -> [RanklistRow] -> M.Map Party Delta
@@ -45,11 +49,21 @@ mkContestants prevRatings = map
 
 --------------------------------------------------------------------------------
 
+-- | Ratings mapped to seed (expected ranking)
+type SeedCache = M.Map Int Seed
+
 -- | Computes each party's rating delta with the necessary adjustments, given a
 -- list of contestants.
 process :: [Contestant] -> M.Map Party Delta
 process [] = M.empty
-process cs = adjustTopDeltas cs . adjustAllDeltas . calculateDeltas $ cs
+process cs = flip runReader (precomputeSeeds cs) $ do
+    ds <- calculateDeltas cs
+    pure . adjustTopDeltas cs . adjustAllDeltas $ ds
+
+-- | Computes the seed of each contestant.
+precomputeSeeds :: [Contestant] -> SeedCache
+precomputeSeeds cs =
+    M.fromList $ map (\c -> (contestantRating c, calculateSeedOf c cs)) cs
 
 -- | Adjusts rating deltas to ensure the total sum of deltas is not more than
 -- zero. If it is, the extra amount is distributed between all contestants.
@@ -88,10 +102,14 @@ adjustTopDeltas cs ds = M.map (+ inc) ds
     round'       = round :: Double -> Int
 
 -- | Computes the rating delta for each party in this contest.
-calculateDeltas :: [Contestant] -> M.Map Party Delta
-calculateDeltas cs = M.fromList $ map
-    (\c -> (contestantParty c, calculateDelta c cs))
-    (reassignRanks cs)
+--
+-- See 'calculateDelta' for details.
+--
+calculateDeltas :: [Contestant] -> Reader SeedCache (M.Map Party Delta)
+calculateDeltas cs = do
+    let sorted = reassignRanks cs
+    deltas <- forM sorted $ \c -> calculateDelta c cs <&> (contestantParty c, )
+    pure $ M.fromList deltas
 
 -- | Sorts and recomputes the rank of each contestant.
 --
@@ -152,17 +170,29 @@ reassignRanks = go 1 1 . sortByPointsDesc
 -- d_i = \frac{R - r_i}{2}
 -- \]
 --
-calculateDelta :: Contestant -> [Contestant] -> Delta
-calculateDelta c cs = (needRating - contestantRating c) `div` 2
-    where needRating = calculateNeedRating cs (midRank c cs)
+calculateDelta :: Contestant -> [Contestant] -> Reader SeedCache Delta
+calculateDelta c cs = do
+    mid <- midRank c cs
+    let needRating = calculateNeedRating cs mid
+    pure $ (needRating - contestantRating c) `div` 2
 
--- | Computes the geometric mean of a contestant's seed (expected ranking) and
--- actual ranking.
+-- | The geometric mean of a contestant's seed (expected ranking) and actual
+-- ranking.
 --
 -- This ranking is between the expected and actual ranking.
 --
-midRank :: Contestant -> [Contestant] -> Float
-midRank c cs = sqrt $ fromIntegral (contestantRank c) * calculateSeedOf c cs
+midRank :: Contestant -> [Contestant] -> Reader SeedCache Seed
+midRank c cs = do
+    seed <- getSeed c cs
+    pure $ sqrt $ fromIntegral (contestantRank c) * seed
+
+-- | Looks up the seed from the cache. If not found, computes it.
+getSeed :: Contestant -> [Contestant] -> Reader SeedCache Seed
+getSeed c cs = do
+    cache <- ask
+    case M.lookup (contestantRating c) cache of
+        Nothing     -> pure $ calculateSeedOf c cs
+        (Just seed) -> pure seed
 
 -- | Given a list of contestants and this contestant's 'midRank', calculates
 -- the rating a contestant should have to achieve their expected ranking, using

@@ -39,6 +39,7 @@ default-extensions:
   - OverloadedStrings
   - RecordWildCards
   - ScopedTypeVariables
+  - TupleSections
 
 library:
   source-dirs: src
