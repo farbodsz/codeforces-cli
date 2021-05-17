@@ -10,7 +10,7 @@ import Codeforces.User (Handle)
 import Codeforces.Virtual.Types
 
 import Control.Monad
-import Control.Monad.Trans.Reader
+import Control.Monad.Trans.State
 
 import Data.Functor ((<&>))
 import Data.List
@@ -56,7 +56,7 @@ type SeedCache = M.Map Int Seed
 -- list of contestants.
 process :: [Contestant] -> M.Map Party Delta
 process [] = M.empty
-process cs = flip runReader (precomputeSeeds cs) $ do
+process cs = flip evalState (precomputeSeeds cs) $ do
     ds <- calculateDeltas cs
     pure . adjustTopDeltas cs . adjustAllDeltas $ ds
 
@@ -105,7 +105,7 @@ adjustTopDeltas cs ds = M.map (+ inc) ds
 --
 -- See 'calculateDelta' for details.
 --
-calculateDeltas :: [Contestant] -> Reader SeedCache (M.Map Party Delta)
+calculateDeltas :: [Contestant] -> State SeedCache (M.Map Party Delta)
 calculateDeltas cs = do
     let sorted = reassignRanks cs
     deltas <- forM sorted $ \c -> calculateDelta c cs <&> (contestantParty c, )
@@ -157,9 +157,6 @@ reassignRanks = go 1 1 . sortByPointsDesc
 
     withRank r c = c { contestantRank = r }
 
---------------------------------------------------------------------------------
--- Calculating deltas, seeds and probabilities
-
 -- | 'calculateDelta' @c cs@ computes the rating delta for contestant @c@ using
 -- a seed computed from all other contestants @cs@.
 --
@@ -170,10 +167,11 @@ reassignRanks = go 1 1 . sortByPointsDesc
 -- d_i = \frac{R - r_i}{2}
 -- \]
 --
-calculateDelta :: Contestant -> [Contestant] -> Reader SeedCache Delta
+calculateDelta :: Contestant -> [Contestant] -> State SeedCache Delta
 calculateDelta c cs = do
-    mid <- midRank c cs
-    let needRating = calculateNeedRating cs mid
+    mid        <- midRank c cs
+    needRating <- calculateNeedRating cs mid
+
     pure $ (needRating - contestantRating c) `div` 2
 
 -- | The geometric mean of a contestant's seed (expected ranking) and actual
@@ -181,18 +179,10 @@ calculateDelta c cs = do
 --
 -- This ranking is between the expected and actual ranking.
 --
-midRank :: Contestant -> [Contestant] -> Reader SeedCache Seed
+midRank :: Contestant -> [Contestant] -> State SeedCache Seed
 midRank c cs = do
-    seed <- getSeed c cs
+    seed <- getSeedOf c cs
     pure $ sqrt $ fromIntegral (contestantRank c) * seed
-
--- | Looks up the seed from the cache. If not found, computes it.
-getSeed :: Contestant -> [Contestant] -> Reader SeedCache Seed
-getSeed c cs = do
-    cache <- ask
-    case M.lookup (contestantRating c) cache of
-        Nothing     -> pure $ calculateSeedOf c cs
-        (Just seed) -> pure seed
 
 -- | Given a list of contestants and this contestant's 'midRank', calculates
 -- the rating a contestant should have to achieve their expected ranking, using
@@ -204,14 +194,41 @@ getSeed c cs = do
 -- R : seed_i = m_i
 -- \]
 --
-calculateNeedRating :: [Contestant] -> Float -> Int
+calculateNeedRating :: [Contestant] -> Float -> State SeedCache Int
 calculateNeedRating cs rank = go 1 8000
   where
     go l r
-        | r - l <= 1 = l
-        | r - l > 1 && calculateSeed mid cs < rank = go l mid
-        | otherwise  = go mid r
-        where mid = (l + r) `div` 2
+        | r - l <= 1 = pure l
+        | otherwise = do
+            let mid = (l + r) `div` 2
+            seed <- getSeed mid cs
+
+            if seed < rank then go l mid else go mid r
+
+--------------------------------------------------------------------------------
+-- Seed calculations and lookups
+
+-- | Looks up the seed for a given rating from the cache. If not found, computes
+-- it and updates the cache.
+getSeed :: Int -> [Contestant] -> State SeedCache Seed
+getSeed rating cs = do
+    cache <- get
+
+    case M.lookup rating cache of
+        Nothing -> do
+            let seed = calculateSeed rating cs
+            modify $ M.insert rating seed
+            pure seed
+
+        (Just seed) -> pure seed
+
+-- | Like 'getSeed' but takes a contestant and list of /all/ contestants.
+getSeedOf :: Contestant -> [Contestant] -> State SeedCache Seed
+getSeedOf x ys = getSeed (contestantRating x) (filter (/= x) ys)
+
+-- | r - l <= 1 = l
+-- | r - l > 1 && calculateSeed mid cs < rank = go l mid
+-- | otherwise  = go mid r
 
 -- | Calculates the seed of a contestant with the given rating, using the
 -- supplied list of all /other/ contestants.
@@ -229,8 +246,7 @@ calculateSeed :: Int -> [Contestant] -> Seed
 calculateSeed rating others =
     1 + sum [ getEloWinProbability (contestantRating x) rating | x <- others ]
 
--- | Helper function like 'calculateSeed' but takes a contestant and a list of
--- all contestants.
+-- | Like 'calculateSeed' but takes a contestant and list of /all/ contestants.
 calculateSeedOf :: Contestant -> [Contestant] -> Seed
 calculateSeedOf x ys = calculateSeed (contestantRating x) (filter (/= x) ys)
 
