@@ -10,8 +10,7 @@ module Commands
     , parseCommands
     ) where
 
-import Codeforces.Problem (Points)
-import Codeforces.User (Handle)
+import Codeforces.Types
 
 import Options.Applicative
 

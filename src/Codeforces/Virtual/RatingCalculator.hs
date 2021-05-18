@@ -9,7 +9,7 @@ module Codeforces.Virtual.RatingCalculator
 
 import Codeforces.Party hiding (Contestant)
 import Codeforces.Standings
-import Codeforces.User (Handle)
+import Codeforces.Types
 import Codeforces.Virtual.Types
 
 import Control.Monad

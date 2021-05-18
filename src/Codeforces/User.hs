@@ -2,13 +2,13 @@
 
 module Codeforces.User where
 
+import Codeforces.Types
+
 import Data.Aeson
 import Data.Maybe
 import Data.Text (Text)
 
 --------------------------------------------------------------------------------
-
-type Handle = Text
 
 data User = User
     { userHandle        :: Handle

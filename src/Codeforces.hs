@@ -8,6 +8,7 @@ module Codeforces
     , module Codeforces.RatingChange
     , module Codeforces.Standings
     , module Codeforces.Submission
+    , module Codeforces.Types
     , module Codeforces.User
     , ResponseError(..)
 
@@ -53,6 +54,7 @@ import Codeforces.Rank
 import Codeforces.RatingChange
 import Codeforces.Standings
 import Codeforces.Submission
+import Codeforces.Types
 import Codeforces.User
 import Codeforces.Virtual
 

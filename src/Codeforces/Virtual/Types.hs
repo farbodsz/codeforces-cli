@@ -3,8 +3,7 @@
 module Codeforces.Virtual.Types where
 
 import Codeforces.Party
-import Codeforces.Problem (Points)
-import Codeforces.User
+import Codeforces.Types
 
 import Data.List
 import qualified Data.Map as M

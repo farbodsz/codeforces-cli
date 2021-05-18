@@ -4,7 +4,8 @@ module Codeforces.Standings where
 
 import Codeforces.Contest (Contest)
 import Codeforces.Party (Party)
-import Codeforces.Problem (Points, Problem)
+import Codeforces.Problem (Problem)
+import Codeforces.Types
 
 import Data.Aeson
 import Data.Time

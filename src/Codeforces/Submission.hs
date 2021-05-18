@@ -3,7 +3,8 @@
 module Codeforces.Submission where
 
 import Codeforces.Party (Party)
-import Codeforces.Problem (Points, Problem)
+import Codeforces.Problem (Problem)
+import Codeforces.Types
 
 import Data.Aeson
 import Data.Text (Text)

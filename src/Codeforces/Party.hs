@@ -2,7 +2,7 @@
 
 module Codeforces.Party where
 
-import Codeforces.User (Handle)
+import Codeforces.Types
 
 import Data.Aeson
 import Data.Text (Text)

@@ -2,16 +2,12 @@
 
 module Codeforces.Problem where
 
+import Codeforces.Types
+
 import Data.Aeson
 import Data.Text (Text)
 
 --------------------------------------------------------------------------------
-
--- | A letter, or letter with digit(s) indicating the problem index in a
--- contest.
-type ProblemIndex = Text
-
-type Points = Float
 
 type ProblemTag = Text
 

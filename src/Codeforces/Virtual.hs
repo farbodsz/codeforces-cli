@@ -10,7 +10,7 @@ module Codeforces.Virtual
 
 import Codeforces.RatingChange
 import Codeforces.Standings
-import Codeforces.User
+import Codeforces.Types
 import Codeforces.Virtual.RatingCalculator
 import Codeforces.Virtual.Types
 
