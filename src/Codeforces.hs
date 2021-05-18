@@ -15,7 +15,7 @@ module Codeforces
     -- * Contests
     , getContests
     , getContestStandings
-    , getContestStandingsWithUsers
+    , getContestStandings'
     , StandingsParams(..)
 
     -- * Problems
@@ -102,20 +102,18 @@ getContestStandings StandingsParams {..} = getData
     , ("handles"       , argHandles =<< paramHandles)
     ]
 
--- | Like 'getContestStandings' but returns the standings and a map of users in
--- the standings list.
-getContestStandingsWithUsers
+-- | Like 'getContestStandings' but returns the standings and the
+-- 'RatingChange's for each user participating.
+getContestStandings'
     :: StandingsParams
-    -> IO (Either ResponseError (Standings, M.Map Handle User))
-getContestStandingsWithUsers q = runExceptT $ do
-    ss <- ExceptT $ getContestStandings q
-    let rl      = standingsRanklist ss
-    let handles = concatMap (map memberHandle . partyMembers . rrParty) rl
+    -> IO (Either ResponseError (Standings, M.Map Handle RatingChange))
+getContestStandings' params = runExceptT $ do
+    ss  <- ExceptT $ getContestStandings params
+    rcs <- ExceptT $ getContestRatingChanges (paramContestId params)
 
-    us <- ExceptT $ getUsers handles
-    let uMap = M.fromList $ zip handles us
+    let rcsMap = M.fromList $ map (rcHandle >>= (,)) rcs
 
-    pure (ss, uMap)
+    pure (ss, rcsMap)
 
 -- | 'getContestSubmissions' @contestId handle@ returns the submissions made by
 -- the user in the contest given by @contestId@

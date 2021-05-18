@@ -215,7 +215,7 @@ printStandings cId cfg StandingOpts {..} = do
     friends <- ExceptT $ getFriends cfg
     let mHs = if optFriends then Just (cfgHandle cfg : friends) else Nothing
 
-    (ss, us) <- ExceptT $ getContestStandingsWithUsers StandingsParams
+    (ss, rcs) <- ExceptT $ getContestStandings' StandingsParams
         { paramContestId  = cId
         , paramFrom       = Just optFromIndex
         , paramRowCount   = Just optRowCount
@@ -224,22 +224,22 @@ printStandings cId cfg StandingOpts {..} = do
         , paramHandles    = mHs
         }
 
-    lift $ if null us
+    lift $ if null rcs
         then if optFriends
             then putStrLn
                 "Neither you nor your friends participated in this contest."
             else putStrLn "Standings empty."
-        else forM_ (standingsTable ss us) T.putStrLn
+        else forM_ (standingsTable ss rcs) T.putStrLn
 
-standingsTable :: Standings -> M.Map Handle User -> Table
-standingsTable s us = makeTable headers rows
+standingsTable :: Standings -> M.Map Handle RatingChange -> Table
+standingsTable s rcs = makeTable headers rows
   where
     headers = [("#", 5), ("Who", 20), ("=", totalPointsColW), ("*", 5)]
         ++ map (\p -> (problemIndex p, problemColW)) (standingsProblems s)
     rows = map
         (\RanklistRow {..} ->
             [ plainCell $ showText rrRank
-                , partyCell rrParty us
+                , partyCell rrParty rcs
                 , totalPointsCell rrPoints
                 , plainCell $ showText rrPenalty
                 ]
@@ -254,12 +254,12 @@ standingsTable s us = makeTable headers rows
     -- Problem score in ICPC contest is only 2-3 chars wide (e.g. "+5", "-2")
     problemColW     = if scoringType == ScoringICPC then 3 else 5
 
-partyCell :: Party -> M.Map Handle User -> Cell
-partyCell Party {..} us = case partyMembers of
-    [Member {..}] -> case M.lookup memberHandle us of
+partyCell :: Party -> M.Map Handle RatingChange -> Cell
+partyCell Party {..} rcs = case partyMembers of
+    [Member {..}] -> case M.lookup memberHandle rcs of
         Nothing -> plainCell $ participant $ unHandle memberHandle
-        Just u ->
-            coloredCell (userColor u) (participant $ unHandle memberHandle)
+        Just rc ->
+            coloredCell (userColor rc) (participant $ unHandle memberHandle)
 
     ms -> case partyTeamName of
         Nothing       -> plainCell $ participant $ memberList ms
@@ -267,7 +267,7 @@ partyCell Party {..} us = case partyMembers of
   where
     participant = fmtParticipation partyParticipantType
     memberList  = T.intercalate "," . map (unHandle . memberHandle)
-    userColor   = convertRankColor . rankColor . getRank . userRating
+    userColor   = convertRankColor . rankColor . getRank . rcOldRating
 
 -- | 'fmtParticipation' @participantType text@ returns the @text@ with either a
 -- prefix/suffix/no changes, to indicate the type of contest participation.
