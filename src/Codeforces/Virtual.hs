@@ -16,24 +16,34 @@ import Codeforces.Virtual.Types
 
 import Control.Applicative
 
-import Data.Bifunctor (bimap)
-import Data.Bitraversable (bisequence)
 import qualified Data.Map as M
 
 --------------------------------------------------------------------------------
 
--- | Computes the rating change the user would have undergone had they
--- participated in this contest live with their current rating, with their
--- expected ranking for the contest (seed).
+-- | Computes the results the user would have had, had they participated in this
+-- contest live with their current rating.
 calculateResult
     :: VirtualUser          -- ^ Details about the virtual participation.
     -> [RatingChange]       -- ^ Rating changes for this contest
     -> [RanklistRow]        -- ^ Standings for this contest.
-    -> Maybe (Delta, Seed)  -- ^ User's delta and seed for the contest
-calculateResult vu@VirtualUser {..} rcs rrs = bisequence
-    $ bimap (M.lookup virtualParty) (M.lookup vuRating) result
+    -> Maybe VirtualResult  -- ^ Contest results for this user
+calculateResult vu rcs rrs =
+    let ContestResults {..} = computeResults vu rcs rrs
+    in
+        VirtualResult
+        <$> (contestantRank <$> findContestant virtualParty crContestants)
+        <*> M.lookup virtualParty crDeltas
+        <*> M.lookup (vuRating vu) crSeeds
+
+-- | Computes the complete updated results for a contest after including the
+-- virtual user.
+computeResults
+    :: VirtualUser -> [RatingChange] -> [RanklistRow] -> ContestResults
+    -- -> ([Contestant], (M.Map Party Delta, M.Map Int Seed))
+computeResults vu@VirtualUser {..} rcs rrs = calculateContestResults
+    updatedRatings
+    updatedRankings
   where
-    result          = calculateNewRatingChanges updatedRatings updatedRankings
     updatedRatings  = M.insert virtualHandle vuRating (previousRatings rcs)
     updatedRankings = virtualRankings vu rrs
 

@@ -182,7 +182,7 @@ calculateVirtualResult
     -> Handle
     -> Points
     -> Int
-    -> IO (Either ResponseError (Maybe VirtualResult))
+    -> IO (Either ResponseError (User, Maybe VirtualResult))
 calculateVirtualResult cId handle points penalty = runExceptT $ do
     rcs       <- ExceptT $ getContestRatingChanges cId
 
@@ -203,9 +203,7 @@ calculateVirtualResult cId handle points penalty = runExceptT $ do
             }
         result = calculateResult vUser rcs (standingsRanklist standings)
 
-    pure $ case result of
-        Nothing              -> Nothing
-        (Just (delta, seed)) -> Just $ VirtualResult user delta seed
+    pure (user, result)
 
 --------------------------------------------------------------------------------
 

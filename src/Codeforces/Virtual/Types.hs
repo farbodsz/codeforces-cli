@@ -6,6 +6,9 @@ import Codeforces.Party
 import Codeforces.Problem (Points)
 import Codeforces.User
 
+import Data.List
+import qualified Data.Map as M
+
 --------------------------------------------------------------------------------
 
 virtualHandle :: Handle
@@ -55,9 +58,21 @@ data Contestant = Contestant
     }
     deriving (Eq, Show)
 
+-- | Finds a single contestant from the given 'Party', or @Nothing@ if none
+-- found.
+findContestant :: Party -> [Contestant] -> Maybe Contestant
+findContestant p = find ((p ==) . contestantParty)
+
+data ContestResults = ContestResults
+    { crContestants :: [Contestant]
+    , crDeltas      :: M.Map Party Delta
+    , crSeeds       :: M.Map Int Seed
+    }
+    deriving Show
+
 -- | A virtual participation result
 data VirtualResult = VirtualResult
-    { virtualUser  :: User
+    { virtualRank  :: Int
     , virtualDelta :: Delta
     , virtualSeed  :: Seed
     }

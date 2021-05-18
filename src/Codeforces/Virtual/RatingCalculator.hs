@@ -1,7 +1,7 @@
 --------------------------------------------------------------------------------
 
 module Codeforces.Virtual.RatingCalculator
-    ( calculateNewRatingChanges
+    ( calculateContestResults
     ) where
 
 import Codeforces.Party hiding (Contestant)
@@ -19,11 +19,13 @@ import Data.Maybe
 
 --------------------------------------------------------------------------------
 
--- | 'calculateNewRatingChanges' @previousRatings updatedRankings@ computes a
--- map of rating deltas for each user, and seeds for each contestant rating.
-calculateNewRatingChanges
-    :: M.Map Handle Int -> [RanklistRow] -> (M.Map Party Delta, M.Map Int Seed)
-calculateNewRatingChanges hs rrs = process $ mkContestants hs rrs
+-- | 'calculateNewRatingChanges' @previousRatings updatedRankings@ computes the
+-- contest results.
+calculateContestResults :: M.Map Handle Int -> [RanklistRow] -> ContestResults
+calculateContestResults hs rrs = ContestResults sortedCs deltas seeds
+  where
+    sortedCs        = reassignRanks $ mkContestants hs rrs
+    (deltas, seeds) = process sortedCs
 
 -- | Constructs a list of contestants from the previous ratings and rankings.
 mkContestants :: M.Map Handle Int -> [RanklistRow] -> [Contestant]
@@ -102,12 +104,12 @@ adjustTopDeltas cs ds = M.map (+ inc) ds
 
 -- | Computes the rating delta for each party in this contest.
 --
--- See 'calculateDelta' for details.
+-- The input list of contestants must be correctly ordered with 'reassignRanks'
+-- prior to using this function.
 --
 calculateDeltas :: [Contestant] -> State SeedCache (M.Map Party Delta)
 calculateDeltas cs = do
-    let sorted = reassignRanks cs
-    deltas <- forM sorted $ \c -> calculateDelta c cs <&> (contestantParty c, )
+    deltas <- forM cs $ \c -> calculateDelta c cs <&> (contestantParty c, )
     pure $ M.fromList deltas
 
 -- | Sorts and recomputes the rank of each contestant.

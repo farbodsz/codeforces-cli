@@ -428,16 +428,18 @@ virtualRating :: Int -> Handle -> Points -> Int -> IO ()
 virtualRating cId h pts pen = do
     calculateVirtualResult cId h pts pen >>= either printError printVirtualRes
 
-printVirtualRes :: Maybe VirtualResult -> IO ()
-printVirtualRes Nothing =
+printVirtualRes :: (User, Maybe VirtualResult) -> IO ()
+printVirtualRes (_, Nothing) =
     putStrLn
         $  "An unexpected error occurred.\n"
         ++ "Your rating change could not be calculated."
-printVirtualRes (Just VirtualResult {..}) = do
+printVirtualRes (u, Just VirtualResult {..}) = do
+    printRankings virtualSeed virtualRank
+
     putStrLn ""
     putStrLn "Rating change:"
 
-    let currRating = userRating virtualUser
+    let currRating = userRating u
     let currRank   = getRank currRating
     let newRating  = currRating + virtualDelta
     let newRank    = getRank newRating
@@ -454,17 +456,23 @@ printVirtualRes (Just VirtualResult {..}) = do
                 [ "Would remain "
                 , rankName currRank
                 , " "
-                , rankColored (rankColor currRank) (userHandle virtualUser)
+                , rankColored (rankColor currRank) (userHandle u)
                 ]
             else T.concat
                 [ "Would become "
                 , rankName newRank
                 , ": "
-                , rankColored (rankColor currRank) (userHandle virtualUser)
+                , rankColored (rankColor currRank) (userHandle u)
                 , " -> "
-                , rankColored (rankColor newRank) (userHandle virtualUser)
+                , rankColored (rankColor newRank) (userHandle u)
                 ]
     T.putStrLn $ T.concat ["  ", desc, "\n"]
+
+printRankings :: Seed -> Int -> IO ()
+printRankings seed rank = do
+    putStrLn ""
+    putStrLn $ "Expected ranking: " ++ show (round seed :: Int)
+    putStrLn $ "Actual ranking:   " ++ show rank
 
 --------------------------------------------------------------------------------
 
