@@ -36,20 +36,21 @@ main = do
 
     case command of
         -- List/tabulate data
-        ContestsCmd opts      -> contestList opts
-        InfoCmd cId opts      -> contestInfo cId config opts
-        ProblemsCmd opts      -> problemList opts
-        StandingsCmd cId opts -> standingsList cId config opts
+        ContestsCmd opts         -> contestList opts
+        InfoCmd cId opts         -> contestInfo cId config opts
+        ProblemsCmd opts         -> problemList opts
+        StandingsCmd cId opts    -> standingsList cId config opts
 
         -- User-related commands
-        UserCmd    h          -> userInfo h
-        RatingsCmd h          -> userRatings h
-        StatusCmd h opts      -> userStatus h opts
-        FriendsCmd            -> userFriends config
+        UserCmd    h             -> userInfo h
+        RatingsCmd h             -> userRatings h
+        StatusCmd h opts         -> userStatus h opts
+        FriendsCmd               -> userFriends config
+        VirtualCmd cId h pts pen -> virtualRating cId h pts pen
 
         -- Miscellaneous
-        SetupCmd              -> setupConfig
-        OpenCmd cId           -> openContest cId
+        SetupCmd                 -> setupConfig
+        OpenCmd cId              -> openContest cId
 
 --------------------------------------------------------------------------------
 
@@ -216,8 +217,8 @@ printStandings cId cfg StandingOpts {..} = do
 
     (ss, us) <- ExceptT $ getContestStandingsWithUsers StandingsParams
         { paramContestId  = cId
-        , paramFrom       = optFromIndex
-        , paramRowCount   = optRowCount
+        , paramFrom       = Just optFromIndex
+        , paramRowCount   = Just optRowCount
         , paramRoom       = optRoom
         , paramUnofficial = optShowUnofficial
         , paramHandles    = mHs
@@ -423,6 +424,58 @@ printFriends = mapM_ T.putStrLn
 
 --------------------------------------------------------------------------------
 
+virtualRating :: Int -> Handle -> Points -> Int -> IO ()
+virtualRating cId h pts pen = do
+    calculateVirtualResult cId h pts pen >>= either printError printVirtualRes
+
+printVirtualRes :: (User, Maybe VirtualResult) -> IO ()
+printVirtualRes (_, Nothing) =
+    putStrLn
+        $  "An unexpected error occurred.\n"
+        ++ "Your rating change could not be calculated."
+printVirtualRes (u, Just VirtualResult {..}) = do
+    printRankings virtualSeed virtualRank
+
+    putStrLn ""
+    putStrLn "Rating change:"
+
+    let currRating = userRating u
+    let currRank   = getRank currRating
+    let newRating  = currRating + virtualDelta
+    let newRank    = getRank newRating
+
+    putStrLn $ concat ["  (", show currRating, " -> ", show newRating, ")"]
+    putStrLn ""
+
+    T.putStrLn $ T.concat ["  ", indent, diffColored virtualDelta]
+    putStrLn ""
+
+    let
+        desc = if currRank == newRank
+            then T.concat
+                [ "Would remain "
+                , rankName currRank
+                , " "
+                , rankColored (rankColor currRank) (userHandle u)
+                ]
+            else T.concat
+                [ "Would become "
+                , rankName newRank
+                , ": "
+                , rankColored (rankColor currRank) (userHandle u)
+                , " -> "
+                , rankColored (rankColor newRank) (userHandle u)
+                ]
+    T.putStrLn $ T.concat ["  ", desc, "\n"]
+
+printRankings :: Seed -> Int -> IO ()
+printRankings seed rank = do
+    putStrLn ""
+    putStrLn $ "Expected ranking: " ++ show (round seed :: Int)
+    putStrLn $ "Actual ranking:   " ++ show rank
+
+--------------------------------------------------------------------------------
+
 -- | 'showText' @x@ is a 'Data.Text' version of 'show'
 showText :: Show a => a -> Text
 showText = T.pack . show
@@ -473,6 +526,13 @@ differenceCell x
     | x > 0     = coloredCell Green $ "+" <> showText x
     | x == 0    = plainCell $ " " <> showText x
     | otherwise = coloredCell Red $ showText x
+
+-- | Like 'differenceCell' but returns a 'Text' rather than a 'Cell'.
+diffColored :: Int -> Text
+diffColored x
+    | x > 0     = colored Green $ "+" <> showText x
+    | x == 0    = " " <> showText x
+    | otherwise = colored Red $ showText x
 
 -- | 'verdictCell' @testset passedTestCount points verdict@ returns a cell
 -- displaying the status of a submission, such as "Accepted" or "Wrong answer on

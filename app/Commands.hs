@@ -10,6 +10,7 @@ module Commands
     , parseCommands
     ) where
 
+import Codeforces.Problem (Points)
 import Codeforces.User (Handle)
 
 import Options.Applicative
@@ -27,6 +28,7 @@ data Command
     | StandingsCmd Int StandingOpts
     | StatusCmd Handle StatusOpts
     | UserCmd Handle
+    | VirtualCmd Int Handle Points Int
     deriving Eq
 
 data ContestOpts = ContestOpts
@@ -108,6 +110,15 @@ commandP =
                "status"
                (info statusP (progDesc "Recent submissions of a user"))
         <> command "user" (info userP (progDesc "Information about a user"))
+        <> command
+               "virtual"
+               (info
+                   virtualP
+                   (progDesc
+                       "Calculate your rating after a virtual contest,\
+                           \ to find what it would be if you competed live"
+                   )
+               )
 
 contestsP :: Parser Command
 contestsP =
@@ -219,6 +230,14 @@ statusOpts = StatusOpts <$> fromOpt <*> countOpt
 
 userP :: Parser Command
 userP = UserCmd <$> handleArg
+
+virtualP :: Parser Command
+virtualP =
+    VirtualCmd
+        <$> contestIdArg
+        <*> handleArg
+        <*> argument auto (metavar "POINTS" <> help "Total points")
+        <*> argument auto (metavar "PENALTY" <> help "Total penalty")
 
 --------------------------------------------------------------------------------
 

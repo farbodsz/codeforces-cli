@@ -9,6 +9,7 @@ module Codeforces.Common
 import Codeforces.Config
 
 import Data.Aeson
+import Data.Maybe
 
 import Network.HTTP.Simple
 
@@ -65,12 +66,12 @@ baseUrl = "https://codeforces.com/api"
 getData :: FromJSON a => String -> Query -> IO (Either ResponseError a)
 getData path query = do
     req <- parseRequest (baseUrl ++ path)
-    let request = setRequestQueryString query req
+    let request = setRequestQueryString (catQuery query) req
 
     response <- httpJSONEither request
     pure $ codeforcesDecode $ getResponseBody response
 
--- | 'getAuthorizedData' @config path query@ requests and returnsn some result
+-- | 'getAuthorizedData' @config path query@ requests and returns some result
 -- data that requires authorization.
 getAuthorizedData
     :: FromJSON a
@@ -79,5 +80,19 @@ getAuthorizedData
     -> Query
     -> IO (Either ResponseError a)
 getAuthorizedData cfg p q = generateRequestParams cfg p q >>= getData p
+
+--------------------------------------------------------------------------------
+
+-- | Takes a list of 'QueryItem's and returns those that have a @Just@ parameter
+-- value.
+--
+-- By default, @Nothing@ items in 'Query' are parsed into "&a&b" format. The 
+-- Codeforces API seems to be inconsistent with how it interprets requests like
+-- this. Most notably, the @contest.standings@ endpoint returns an empty list of
+-- ranklist rows when @Nothing@ is passed, but all ranklist rows when completely
+-- omitted.
+--
+catQuery :: Query -> Query
+catQuery = filter (isJust . snd)
 
 --------------------------------------------------------------------------------

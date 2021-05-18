@@ -22,6 +22,7 @@ module Codeforces
     , getProblems
 
     -- * Ratings and ranks
+    , getContestRatingChanges
     , getUserRatingHistory
 
     -- * Problem submissions
@@ -32,6 +33,12 @@ module Codeforces
     , getUser
     , getUsers
     , getFriends
+
+    -- * Virtual rating calculation
+    , calculateVirtualResult
+    , Delta
+    , Seed
+    , VirtualResult(..)
 
     -- * Configuration options
     , UserConfig(..)
@@ -47,6 +54,7 @@ import Codeforces.RatingChange
 import Codeforces.Standings
 import Codeforces.Submission
 import Codeforces.User
+import Codeforces.Virtual
 
 import Control.Monad.Trans.Except
 
@@ -66,9 +74,9 @@ data StandingsParams = StandingsParams
     -- | ID of the contest
       paramContestId  :: Int
     -- | The starting index of the ranklist (1-based)
-    , paramFrom       :: Int
+    , paramFrom       :: Maybe Int
     -- | The number of standing rows to return
-    , paramRowCount   :: Int
+    , paramRowCount   :: Maybe Int
     -- | If specified, only standings of this room are returned
     , paramRoom       :: Maybe Int
     -- | If true, all participations are included. Otherwise only 'Contestant'
@@ -85,11 +93,11 @@ getContestStandings :: StandingsParams -> IO (Either ResponseError Standings)
 getContestStandings StandingsParams {..} = getData
     "/contest.standings"
     [ ("contestId"     , argInt paramContestId)
-    , ("from"          , argInt paramFrom)
-    , ("count"         , argInt paramRowCount)
+    , ("from"          , argInt =<< paramFrom)
+    , ("count"         , argInt =<< paramRowCount)
     , ("room"          , argInt =<< paramRoom)
     , ("showUnofficial", argBool paramUnofficial)
-    , ("handles", T.encodeUtf8 . T.intercalate ";" <$> paramHandles)
+    , ("handles"       , T.encodeUtf8 . T.intercalate ";" <$> paramHandles)
     ]
 
 -- | Like 'getContestStandings' but returns the standings and a map of users in
@@ -129,6 +137,12 @@ getProblems ts = fmap prProblems <$> getAllProblemData ts
 
 --------------------------------------------------------------------------------
 
+-- | 'getContestRatingChanges' @contestId@ returns a  list of 'RatingChange's
+-- for the contest.
+getContestRatingChanges :: Int -> IO (Either ResponseError [RatingChange])
+getContestRatingChanges cId =
+    getData "/contest.ratingChanges" [("contestId", argInt cId)]
+
 -- | 'getUserRatingHistory' @handle@ returns a list of 'RatingChange's for the
 -- requested user
 getUserRatingHistory :: Handle -> IO (Either ResponseError [RatingChange])
@@ -156,6 +170,40 @@ getUserStatus :: Handle -> Int -> Int -> IO (Either ResponseError [Submission])
 getUserStatus h f n = getData
     "/user.status"
     [("handle", argHandle h), ("from", argInt f), ("count", argInt n)]
+
+--------------------------------------------------------------------------------
+
+-- | 'calculateVirtualResult' @contestId handle points penalty@ computes the
+-- rating change the user would gain had they competed in the contest live, and
+-- their expected ranking for the contest.
+--
+calculateVirtualResult
+    :: Int
+    -> Handle
+    -> Points
+    -> Int
+    -> IO (Either ResponseError (User, Maybe VirtualResult))
+calculateVirtualResult cId handle points penalty = runExceptT $ do
+    rcs       <- ExceptT $ getContestRatingChanges cId
+
+    standings <- ExceptT $ getContestStandings $ StandingsParams
+        { paramContestId  = cId
+        , paramFrom       = Nothing
+        , paramRowCount   = Nothing
+        , paramRoom       = Nothing
+        , paramUnofficial = False
+        , paramHandles    = Nothing
+        }
+
+    user <- ExceptT $ getUser handle
+    let vUser = VirtualUser
+            { vuPoints  = points
+            , vuPenalty = penalty
+            , vuRating  = userRating user
+            }
+        result = calculateResult vUser rcs (standingsRanklist standings)
+
+    pure (user, result)
 
 --------------------------------------------------------------------------------
 
