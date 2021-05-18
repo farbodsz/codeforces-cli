@@ -5,7 +5,7 @@ module Codeforces.Virtual
     , VirtualResult(..)
     , Delta
     , Seed
-    , calculateVirtualRatingChange
+    , calculateResult
     ) where
 
 import Codeforces.RatingChange
@@ -16,23 +16,25 @@ import Codeforces.Virtual.Types
 
 import Control.Applicative
 
+import Data.Bifunctor (bimap)
+import Data.Bitraversable (bisequence)
 import qualified Data.Map as M
 
 --------------------------------------------------------------------------------
 
 -- | Computes the rating change the user would have undergone had they
--- participated in this contest live with their current rating.
-calculateVirtualRatingChange
-    :: VirtualUser      -- ^ Details about the virtual participation.
-    -> [RatingChange]   -- ^ Rating changes for this contest
-    -> [RanklistRow]    -- ^ Standings for this contest.
-    -> Maybe Delta      -- ^ User's delta had they participated as contestant
-calculateVirtualRatingChange vu@VirtualUser {..} rcs rrs = M.lookup
-    virtualParty
-    updatedDeltas
+-- participated in this contest live with their current rating, with their
+-- expected ranking for the contest (seed).
+calculateResult
+    :: VirtualUser          -- ^ Details about the virtual participation.
+    -> [RatingChange]       -- ^ Rating changes for this contest
+    -> [RanklistRow]        -- ^ Standings for this contest.
+    -> Maybe (Delta, Seed)  -- ^ User's delta and seed for the contest
+calculateResult vu@VirtualUser {..} rcs rrs = bisequence
+    $ bimap (M.lookup virtualParty) (M.lookup vuRating) result
   where
-    updatedDeltas   = calculateNewRatingChanges updatedRatings updatedRankings
-    updatedRatings  = M.insert virtualHandle vuCurrRating (previousRatings rcs)
+    result          = calculateNewRatingChanges updatedRatings updatedRankings
+    updatedRatings  = M.insert virtualHandle vuRating (previousRatings rcs)
     updatedRankings = virtualRankings vu rrs
 
 -- | 'previousRatings' @ratingChanges@ returns a map of each user's handle to

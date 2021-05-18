@@ -26,9 +26,9 @@ virtualParty = Party
 
 -- | Represents the virtual participation of the user in this contest.
 data VirtualUser = VirtualUser
-    { vuPoints     :: Points  -- ^ Points scored in the virtual contest.
-    , vuPenalty    :: Int     -- ^ User's penalty in the virtual contest.
-    , vuCurrRating :: Int     -- ^ Current rating of the user.
+    { vuPoints  :: Points   -- ^ Points scored in the virtual contest.
+    , vuPenalty :: Int      -- ^ User's penalty in the virtual contest.
+    , vuRating  :: Int      -- ^ Current rating of the user.
     }
     deriving Show
 
@@ -59,6 +59,7 @@ data Contestant = Contestant
 data VirtualResult = VirtualResult
     { virtualUser  :: User
     , virtualDelta :: Delta
+    , virtualSeed  :: Seed
     }
     deriving Show
 

@@ -35,7 +35,7 @@ module Codeforces
     , getFriends
 
     -- * Virtual rating calculation
-    , calculateVirtualDelta
+    , calculateVirtualResult
     , Delta
     , Seed
     , VirtualResult(..)
@@ -173,18 +173,17 @@ getUserStatus h f n = getData
 
 --------------------------------------------------------------------------------
 
--- | 'calculateVirtualDelta' @contestId handle points penalty@ computes the
--- rating change the user would gain had they competed in the contest live.
+-- | 'calculateVirtualResult' @contestId handle points penalty@ computes the
+-- rating change the user would gain had they competed in the contest live, and
+-- their expected ranking for the contest.
 --
--- Returns the results of the virtual user, if available.
---
-calculateVirtualDelta
+calculateVirtualResult
     :: Int
     -> Handle
     -> Points
     -> Int
     -> IO (Either ResponseError (Maybe VirtualResult))
-calculateVirtualDelta cId handle points penalty = runExceptT $ do
+calculateVirtualResult cId handle points penalty = runExceptT $ do
     rcs       <- ExceptT $ getContestRatingChanges cId
 
     standings <- ExceptT $ getContestStandings $ StandingsParams
@@ -198,16 +197,15 @@ calculateVirtualDelta cId handle points penalty = runExceptT $ do
 
     user <- ExceptT $ getUser handle
     let vUser = VirtualUser
-            { vuPoints     = points
-            , vuPenalty    = penalty
-            , vuCurrRating = userRating user
+            { vuPoints  = points
+            , vuPenalty = penalty
+            , vuRating  = userRating user
             }
-        delta =
-            calculateVirtualRatingChange vUser rcs (standingsRanklist standings)
+        result = calculateResult vUser rcs (standingsRanklist standings)
 
-    pure $ case delta of
-        Nothing  -> Nothing
-        (Just d) -> Just $ VirtualResult user d
+    pure $ case result of
+        Nothing              -> Nothing
+        (Just (delta, seed)) -> Just $ VirtualResult user delta seed
 
 --------------------------------------------------------------------------------
 

@@ -426,14 +426,14 @@ printFriends = mapM_ T.putStrLn
 
 virtualRating :: Int -> Handle -> Points -> Int -> IO ()
 virtualRating cId h pts pen = do
-    calculateVirtualDelta cId h pts pen >>= either printError printVirtualDelta
+    calculateVirtualResult cId h pts pen >>= either printError printVirtualRes
 
-printVirtualDelta :: Maybe VirtualResult -> IO ()
-printVirtualDelta Nothing =
+printVirtualRes :: Maybe VirtualResult -> IO ()
+printVirtualRes Nothing =
     putStrLn
         $  "An unexpected error occurred.\n"
         ++ "Your rating change could not be calculated."
-printVirtualDelta (Just VirtualResult {..}) = do
+printVirtualRes (Just VirtualResult {..}) = do
     putStrLn ""
     putStrLn "Rating change:"
 

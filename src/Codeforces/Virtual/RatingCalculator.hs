@@ -20,10 +20,9 @@ import Data.Maybe
 --------------------------------------------------------------------------------
 
 -- | 'calculateNewRatingChanges' @previousRatings updatedRankings@ computes a
--- map of rating deltas for each user, taking into account the virtual user's
--- participation.
+-- map of rating deltas for each user, and seeds for each contestant rating.
 calculateNewRatingChanges
-    :: M.Map Handle Int -> [RanklistRow] -> M.Map Party Delta
+    :: M.Map Handle Int -> [RanklistRow] -> (M.Map Party Delta, M.Map Int Seed)
 calculateNewRatingChanges hs rrs = process $ mkContestants hs rrs
 
 -- | Constructs a list of contestants from the previous ratings and rankings.
@@ -52,11 +51,11 @@ mkContestants prevRatings = map
 -- | Ratings mapped to seed (expected ranking)
 type SeedCache = M.Map Int Seed
 
--- | Computes each party's rating delta with the necessary adjustments, given a
--- list of contestants.
-process :: [Contestant] -> M.Map Party Delta
-process [] = M.empty
-process cs = flip evalState (precomputeSeeds cs) $ do
+-- | Computes each party's rating delta and each rating's seed, given a list of
+-- contestants.
+process :: [Contestant] -> (M.Map Party Delta, SeedCache)
+process [] = (M.empty, M.empty)
+process cs = flip runState (precomputeSeeds cs) $ do
     ds <- calculateDeltas cs
     pure . adjustTopDeltas cs . adjustAllDeltas $ ds
 
