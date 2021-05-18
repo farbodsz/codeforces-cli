@@ -1,5 +1,8 @@
 --------------------------------------------------------------------------------
 
+-- | Implementation of the Open Codeforces Rating System described in 
+-- <https://codeforces.com/blog/entry/20762 Mike Mirzayanov's blog post>.
+--
 module Codeforces.Virtual.RatingCalculator
     ( calculateContestResults
     ) where
@@ -34,19 +37,41 @@ mkContestants prevRatings = map
         { contestantParty  = rrParty
         , contestantRank   = rrRank
         , contestantPoints = rrPoints
-        , contestantRating = findContestantRating rrParty
+        , contestantRating = getPartyRating rrParty
         }
     )
   where
-    -- TODO: Calculate properly
-    -- avgMemberRating = average . catMaybes . memberRatings
-    -- average         = liftA2 div sum length
-    -- memberRatings =
-    --     map (flip M.lookup prevRatings. memberHandle) . partyMembers
+    getPartyRating = computePartyRating . map lookupRating . partyMembers
+    lookupRating m = M.findWithDefault initRating (memberHandle m) prevRatings
 
-    findContestantRating p = case partyMembers p of
-        [m] -> fromMaybe 0 $ M.lookup (memberHandle m) prevRatings
-        _   -> 0
+--------------------------------------------------------------------------------
+
+-- | Initial rating of a member, if they do not already have a rating.
+initRating :: Int
+initRating = 0
+
+-- | Calculates the overall rating for a party using the ratings of its team
+-- members.
+--
+-- >>> computePartyRating [1400]
+-- 1400
+--
+-- >>> computePartyRating [1400, 1500, 1600]
+-- 1749
+--
+computePartyRating :: [Int] -> Int
+computePartyRating ratings = go 20 100 4000
+  where
+    go :: Int -> Float -> Float -> Int
+    go 0 l r = round $ (l + r) / 2
+    go i l r
+        | computed > mid = go (i - 1) mid r
+        | otherwise      = go (i - 1) l mid
+      where
+        mid = (l + r) / 2
+        rWinsProbability =
+            product $ map (getEloWinProbability mid . fromIntegral) ratings
+        computed = logBase 10 (1 / rWinsProbability - 1) * 400 + mid
 
 --------------------------------------------------------------------------------
 
@@ -227,10 +252,6 @@ getSeed rating cs = do
 getSeedOf :: Contestant -> [Contestant] -> State SeedCache Seed
 getSeedOf x ys = getSeed (contestantRating x) (filter (/= x) ys)
 
--- | r - l <= 1 = l
--- | r - l > 1 && calculateSeed mid cs < rank = go l mid
--- | otherwise  = go mid r
-
 -- | Calculates the seed of a contestant with the given rating, using the
 -- supplied list of all /other/ contestants.
 --
@@ -245,7 +266,7 @@ getSeedOf x ys = getSeed (contestantRating x) (filter (/= x) ys)
 --
 calculateSeed :: Int -> [Contestant] -> Seed
 calculateSeed rating others =
-    1 + sum [ getEloWinProbability (contestantRating x) rating | x <- others ]
+    1 + sum [ getEloWinProbability' (contestantRating x) rating | x <- others ]
 
 -- | Like 'calculateSeed' but takes a contestant and list of /all/ contestants.
 calculateSeedOf :: Contestant -> [Contestant] -> Seed
@@ -272,9 +293,12 @@ calculateSeedOf x ys = calculateSeed (contestantRating x) (filter (/= x) ys)
 -- >>> getEloWinProbability 1200 1400
 -- 0.24025308
 --
-getEloWinProbability :: Int -> Int -> Float
-getEloWinProbability x y = 1 / (1 + 10 ** (diff / 400))
-    where diff = fromIntegral (y - x)
+getEloWinProbability :: Float -> Float -> Float
+getEloWinProbability x y = 1 / (1 + 10 ** ((y - x) / 400))
+
+-- | Like 'getEloWinProbability' but takes 'Int's instead of 'Float's. 
+getEloWinProbability' :: Int -> Int -> Float
+getEloWinProbability' x = getEloWinProbability (fromIntegral x) . fromIntegral
 
 --------------------------------------------------------------------------------
 -- Utility functions

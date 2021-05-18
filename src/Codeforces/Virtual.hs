@@ -28,18 +28,16 @@ calculateResult
     -> [RanklistRow]        -- ^ Standings for this contest.
     -> Maybe VirtualResult  -- ^ Contest results for this user
 calculateResult vu rcs rrs =
-    let ContestResults {..} = computeResults vu rcs rrs
-    in
-        VirtualResult
+    VirtualResult
         <$> (contestantRank <$> findContestant virtualParty crContestants)
         <*> M.lookup virtualParty crDeltas
         <*> M.lookup (vuRating vu) crSeeds
+    where ContestResults {..} = computeResults vu rcs rrs
 
 -- | Computes the complete updated results for a contest after including the
 -- virtual user.
 computeResults
     :: VirtualUser -> [RatingChange] -> [RanklistRow] -> ContestResults
-    -- -> ([Contestant], (M.Map Party Delta, M.Map Int Seed))
 computeResults vu@VirtualUser {..} rcs rrs = calculateContestResults
     updatedRatings
     updatedRankings
