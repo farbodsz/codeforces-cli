@@ -19,6 +19,7 @@ import Data.Functor ((<&>))
 import Data.List
 import qualified Data.Map as M
 import Data.Maybe
+import Data.Ord
 
 --------------------------------------------------------------------------------
 
@@ -303,13 +304,10 @@ getEloWinProbability' x = getEloWinProbability (fromIntegral x) . fromIntegral
 --------------------------------------------------------------------------------
 -- Utility functions
 
-sortByDesc :: (a -> Int) -> [a] -> [a]
-sortByDesc f = sortOn (negate . f)
-
 sortByPointsDesc :: [Contestant] -> [Contestant]
-sortByPointsDesc = sortOn (negate . contestantPoints)
+sortByPointsDesc = sortOn (Down . contestantPoints)
 
 sortByRatingDesc :: [Contestant] -> [Contestant]
-sortByRatingDesc = sortByDesc contestantRating
+sortByRatingDesc = sortOn (Down . contestantRating)
 
 --------------------------------------------------------------------------------
