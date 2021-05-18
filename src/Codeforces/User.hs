@@ -14,8 +14,8 @@ data User = User
     { userHandle        :: Handle
     , userFirstName     :: Maybe Text
     , userLastName      :: Maybe Text
-    , userRating        :: Int
-    , userMaxRating     :: Int
+    , userRating        :: Rating
+    , userMaxRating     :: Rating
     , userCity          :: Maybe Text
     , userCountry       :: Maybe Text
     , userOrganization  :: Maybe Text

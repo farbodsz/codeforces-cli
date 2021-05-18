@@ -1,11 +1,17 @@
+--------------------------------------------------------------------------------
+
 module Codeforces.Rank where
 
+import Codeforces.Types
+
 import Data.Text (Text)
+
+--------------------------------------------------------------------------------
 
 data RankColor = Gray | Green | Cyan | Blue | Violet | Orange | Red
     deriving (Eq, Show)
 
-type RatingBounds = (Int, Int)
+type RatingBounds = (Rating, Rating)
 
 data Rank = Rank
     { rankName   :: Text
@@ -14,7 +20,7 @@ data Rank = Rank
     }
     deriving (Eq, Show)
 
--- | `ranks` is list of all Codeforces ranks
+-- | A list of all Codeforces ranks.
 ranks :: [Rank]
 ranks =
     [ Rank "Newbie"                    Gray   (0   , 1199)
@@ -29,8 +35,10 @@ ranks =
     , Rank "Legendary Grandmaster"     Red    (2900, 9999)
     ]
 
--- | `getRank` @rating@ returns the @Rank@ that matches the user's @rating@
-getRank :: Int -> Rank
+-- | Finds the 'Rank' that matches the supplied rating.
+getRank :: Rating -> Rank
 getRank x = head $ filter withinRankBounds ranks
   where
     withinRankBounds Rank {..} = fst rankBounds <= x && x <= snd rankBounds
+
+--------------------------------------------------------------------------------

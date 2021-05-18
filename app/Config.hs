@@ -6,6 +6,7 @@ module Config
     ) where
 
 import Codeforces.Config
+import Codeforces.Types
 
 import Data.Aeson
 import qualified Data.ByteString.Lazy as BL
@@ -32,7 +33,7 @@ configPath :: IO FilePath
 configPath = getXdgDirectory XdgConfig "codeforces-cli/config.json"
 
 emptyConfig :: UserConfig
-emptyConfig = UserConfig { cfgHandle = "", cfgKey = "", cfgSecret = "" }
+emptyConfig = UserConfig { cfgHandle = Handle "", cfgKey = "", cfgSecret = "" }
 
 --------------------------------------------------------------------------------
 
@@ -79,7 +80,7 @@ createConfig path = do
     secret <- T.getLine
 
     BL.writeFile path $ encode UserConfig
-        { cfgHandle = handle
+        { cfgHandle = Handle handle
         , cfgKey    = key
         , cfgSecret = secret
         }

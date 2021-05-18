@@ -2,6 +2,8 @@
 
 module Codeforces.Contest where
 
+import Codeforces.Types
+
 import Data.Aeson
 import Data.Text (Text)
 import Data.Time
@@ -31,7 +33,7 @@ instance FromJSON ContestPhase where
         _                     -> fail "Invalid Contest Phase"
 
 data Contest = Contest
-    { contestId        :: Int
+    { contestId        :: ContestId
     , contestName      :: Text
     , contestType      :: ScoringType
     , contestPhase     :: ContestPhase

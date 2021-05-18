@@ -96,7 +96,7 @@ instance FromJSON Testset where
 
 data Submission = Submission
     { submissionId                  :: Int
-    , submissionContestId           :: Maybe Int
+    , submissionContestId           :: Maybe ContestId
       -- | Time when the solution was submitted. 
     , submissionTime                :: UTCTime
       -- | The time passed after the start of the contest (or a virtual start 

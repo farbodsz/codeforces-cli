@@ -11,7 +11,7 @@ import qualified Data.Map as M
 --------------------------------------------------------------------------------
 
 virtualHandle :: Handle
-virtualHandle = "VIRTUAL_USER"
+virtualHandle = Handle "VIRTUAL_USER"
 
 -- | A 'Party' representing the user's virtual participation.
 virtualParty :: Party
@@ -30,7 +30,7 @@ virtualParty = Party
 data VirtualUser = VirtualUser
     { vuPoints  :: Points   -- ^ Points scored in the virtual contest.
     , vuPenalty :: Int      -- ^ User's penalty in the virtual contest.
-    , vuRating  :: Int      -- ^ Current rating of the user.
+    , vuRating  :: Rating   -- ^ Current rating of the user.
     }
     deriving Show
 
@@ -53,7 +53,7 @@ data Contestant = Contestant
     { contestantParty  :: Party
     , contestantRank   :: Int
     , contestantPoints :: Points
-    , contestantRating :: Int
+    , contestantRating :: Rating
     }
     deriving (Eq, Show)
 
@@ -65,7 +65,7 @@ findContestant p = find ((p ==) . contestantParty)
 data ContestResults = ContestResults
     { crContestants :: [Contestant]
     , crDeltas      :: M.Map Party Delta
-    , crSeeds       :: M.Map Int Seed
+    , crSeeds       :: M.Map Rating Seed
     }
     deriving Show
 

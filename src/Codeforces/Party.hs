@@ -39,7 +39,7 @@ instance FromJSON ParticipantType where
 
 -- | Represents a party, participating in a contest.
 data Party = Party
-    { partyContestId       :: Maybe Int
+    { partyContestId       :: Maybe ContestId
     , partyMembers         :: [Member]
     , partyParticipantType :: ParticipantType
     , partyTeamId          :: Maybe Int

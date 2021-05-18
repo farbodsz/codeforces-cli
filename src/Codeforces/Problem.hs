@@ -21,13 +21,13 @@ instance FromJSON ProblemType where
         _             -> fail "Invalid ProblemType"
 
 data Problem = Problem
-    { problemContestId :: Maybe Int
+    { problemContestId :: Maybe ContestId
     , problemSetName   :: Maybe Text
     , problemIndex     :: ProblemIndex
     , problemName      :: Text
     , problemType      :: ProblemType
     , problemPoints    :: Maybe Points
-    , problemRating    :: Maybe Int
+    , problemRating    :: Maybe Rating
     , problemTags      :: [ProblemTag]
     }
     deriving Show
@@ -45,7 +45,7 @@ instance FromJSON Problem where
             <*> (v .: "tags")
 
 data ProblemStats = ProblemStats
-    { pStatContestId    :: Maybe Int
+    { pStatContestId    :: Maybe ContestId
     , pStatProblemIndex :: ProblemIndex
     , pStatSolvedCount  :: Int
     }

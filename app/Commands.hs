@@ -19,15 +19,15 @@ import Options.Applicative
 data Command
     = ContestsCmd ContestOpts
     | FriendsCmd
-    | InfoCmd Int InfoOpts
-    | OpenCmd Int
+    | InfoCmd ContestId InfoOpts
+    | OpenCmd ContestId
     | ProblemsCmd ProblemOpts
     | RatingsCmd Handle
     | SetupCmd
-    | StandingsCmd Int StandingOpts
+    | StandingsCmd ContestId StandingOpts
     | StatusCmd Handle StatusOpts
     | UserCmd Handle
-    | VirtualCmd Int Handle Points Int
+    | VirtualCmd ContestId Handle Points Int
     deriving Eq
 
 data ContestOpts = ContestOpts
@@ -42,8 +42,8 @@ data InfoOpts = InfoOpts
     deriving Eq
 
 data ProblemOpts = ProblemOpts
-    { optMinRating :: Int
-    , optMaxRating :: Int
+    { optMinRating :: Rating
+    , optMaxRating :: Rating
     }
     deriving Eq
 
@@ -140,14 +140,16 @@ contestInfoP = InfoCmd <$> contestIdArg <*> contestInfoOpts
 
 contestInfoOpts :: Parser InfoOpts
 contestInfoOpts = InfoOpts <$> optional
-    (strOption
-        (  long "user"
-        <> short 'u'
-        <> help
-               "Codeforces user handle. If specified, it shows the contest details\
-            \ of another user. If not specified, your contest details will be\
-            \ shown."
-        <> metavar "HANDLE"
+    (   Handle
+    <$> (strOption
+            (  long "user"
+            <> short 'u'
+            <> help
+                   "Codeforces user handle. If specified, it shows the contest\
+                   \ details of another user. If not specified, your contest\
+                   \ details will be shown."
+            <> metavar "HANDLE"
+            )
         )
     )
 
@@ -241,10 +243,12 @@ virtualP =
 --------------------------------------------------------------------------------
 
 handleArg :: Parser Handle
-handleArg = argument str (metavar "HANDLE" <> help "Codeforces user handle.")
+handleArg =
+    Handle <$> argument str (metavar "HANDLE" <> help "Codeforces user handle.")
 
-contestIdArg :: Parser Int
-contestIdArg = argument auto (metavar "CONTEST_ID" <> help "ID of the contest")
+contestIdArg :: Parser ContestId
+contestIdArg = ContestId
+    <$> argument auto (metavar "CONTEST_ID" <> help "ID of the contest")
 
 fromOpt :: Parser Int
 fromOpt = option

@@ -6,6 +6,8 @@ module Codeforces.Config
     , generateRequestParams
     ) where
 
+import Codeforces.Types
+
 import qualified Crypto.Hash.SHA512 as SHA512
 
 import Data.Aeson
@@ -33,7 +35,7 @@ import System.Random
 -- this configuration.
 --
 data UserConfig = UserConfig
-    { cfgHandle :: Text     -- ^ Codeforces handle of the user
+    { cfgHandle :: Handle   -- ^ Codeforces handle of the user
     , cfgKey    :: Text     -- ^ First part of the API key
     , cfgSecret :: Text     -- ^ Second part of the API key
     }

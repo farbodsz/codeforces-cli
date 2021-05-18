@@ -74,7 +74,7 @@ getContests isGym = getData "/contest.list" [("gym", argBool isGym)]
 data StandingsParams = StandingsParams
     {
     -- | ID of the contest
-      paramContestId  :: Int
+      paramContestId  :: ContestId
     -- | The starting index of the ranklist (1-based)
     , paramFrom       :: Maybe Int
     -- | The number of standing rows to return
@@ -94,12 +94,12 @@ data StandingsParams = StandingsParams
 getContestStandings :: StandingsParams -> IO (Either ResponseError Standings)
 getContestStandings StandingsParams {..} = getData
     "/contest.standings"
-    [ ("contestId"     , argInt paramContestId)
+    [ ("contestId"     , argContestId paramContestId)
     , ("from"          , argInt =<< paramFrom)
     , ("count"         , argInt =<< paramRowCount)
     , ("room"          , argInt =<< paramRoom)
     , ("showUnofficial", argBool paramUnofficial)
-    , ("handles"       , T.encodeUtf8 . T.intercalate ";" <$> paramHandles)
+    , ("handles"       , argHandles =<< paramHandles)
     ]
 
 -- | Like 'getContestStandings' but returns the standings and a map of users in
@@ -120,10 +120,10 @@ getContestStandingsWithUsers q = runExceptT $ do
 -- | 'getContestSubmissions' @contestId handle@ returns the submissions made by
 -- the user in the contest given by @contestId@
 getContestSubmissions
-    :: Int -> Handle -> IO (Either ResponseError [Submission])
+    :: ContestId -> Handle -> IO (Either ResponseError [Submission])
 getContestSubmissions cId h = getData
     "/contest.status"
-    [("contestId", argInt cId), ("handle", argHandle h)]
+    [("contestId", argContestId cId), ("handle", argHandle h)]
 
 --------------------------------------------------------------------------------
 
@@ -139,11 +139,12 @@ getProblems ts = fmap prProblems <$> getAllProblemData ts
 
 --------------------------------------------------------------------------------
 
--- | 'getContestRatingChanges' @contestId@ returns a  list of 'RatingChange's
+-- | 'getContestRatingChanges' @contestId@ returns a list of 'RatingChange's
 -- for the contest.
-getContestRatingChanges :: Int -> IO (Either ResponseError [RatingChange])
+getContestRatingChanges
+    :: ContestId -> IO (Either ResponseError [RatingChange])
 getContestRatingChanges cId =
-    getData "/contest.ratingChanges" [("contestId", argInt cId)]
+    getData "/contest.ratingChanges" [("contestId", argContestId cId)]
 
 -- | 'getUserRatingHistory' @handle@ returns a list of 'RatingChange's for the
 -- requested user
@@ -180,7 +181,7 @@ getUserStatus h f n = getData
 -- their expected ranking for the contest.
 --
 calculateVirtualResult
-    :: Int
+    :: ContestId
     -> Handle
     -> Points
     -> Int
@@ -220,14 +221,17 @@ argTexts xs
     | null xs   = Nothing
     | otherwise = (Just . T.encodeUtf8 . T.intercalate ";") xs
 
-argHandle :: Handle -> Maybe BC.ByteString
-argHandle = argText
-
-argHandles :: [Handle] -> Maybe BC.ByteString
-argHandles = argTexts
-
 argInt :: Int -> Maybe BC.ByteString
 argInt = Just . BC.pack . show
+
+argContestId :: ContestId -> Maybe BC.ByteString
+argContestId = argInt . unContestId
+
+argHandle :: Handle -> Maybe BC.ByteString
+argHandle = argText . unHandle
+
+argHandles :: [Handle] -> Maybe BC.ByteString
+argHandles = argTexts . map unHandle
 
 argTags :: [ProblemTag] -> Maybe BC.ByteString
 argTags = argTexts

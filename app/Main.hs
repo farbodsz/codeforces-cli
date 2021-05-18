@@ -92,12 +92,12 @@ printContests cs = forM_ (makeTable headers rows) T.putStrLn
 
 --------------------------------------------------------------------------------
 
-contestInfo :: Int -> UserConfig -> InfoOpts -> IO ()
+contestInfo :: ContestId -> UserConfig -> InfoOpts -> IO ()
 contestInfo cId cfg opts =
     runExceptT (printContestInfo cId cfg opts) >>= either printError pure
 
 printContestInfo
-    :: Int -> UserConfig -> InfoOpts -> ExceptT ResponseError IO ()
+    :: ContestId -> UserConfig -> InfoOpts -> ExceptT ResponseError IO ()
 printContestInfo cId cfg opts = do
     let handle = fromMaybe (cfgHandle cfg) (optHandle opts)
 
@@ -112,13 +112,13 @@ printContestInfo cId cfg opts = do
 
 -- | 'contestProblems' @contestId@ returns the problems in contest, sorted by
 -- problem index ascending.
-contestProblems :: Int -> [Problem] -> [Problem]
+contestProblems :: ContestId -> [Problem] -> [Problem]
 contestProblems cId = sortBy (compare `on` problemIndex)
     . filter ((Just cId ==) . problemContestId)
 
 -- | contestStats @contestId stats@ computes all problems in the contest with
 -- @contestId@ returns a map of each contest problem's index to its statistics.
-contestStats :: Int -> [ProblemStats] -> M.Map ProblemIndex ProblemStats
+contestStats :: ContestId -> [ProblemStats] -> M.Map ProblemIndex ProblemStats
 contestStats cId stats =
     let
         inContest = filter ((Just cId ==) . pStatContestId) stats
@@ -176,7 +176,7 @@ printContestInfoTable ps subMap statMap = forM_
 
 -- | 'openContest' @contestId@ opens the URL to the specified contest in the
 -- user's preferred web browser.
-openContest :: Int -> IO ()
+openContest :: ContestId -> IO ()
 openContest cId =
     openBrowser ("https://codeforces.com/contest/" <> show cId) >> pure ()
 
@@ -205,12 +205,12 @@ printProblems ps = forM_ (makeTable headers rows) T.putStrLn
 
 --------------------------------------------------------------------------------
 
-standingsList :: Int -> UserConfig -> StandingOpts -> IO ()
+standingsList :: ContestId -> UserConfig -> StandingOpts -> IO ()
 standingsList cId cfg opts =
     runExceptT (printStandings cId cfg opts) >>= either printError pure
 
 printStandings
-    :: Int -> UserConfig -> StandingOpts -> ExceptT ResponseError IO ()
+    :: ContestId -> UserConfig -> StandingOpts -> ExceptT ResponseError IO ()
 printStandings cId cfg StandingOpts {..} = do
     friends <- ExceptT $ getFriends cfg
     let mHs = if optFriends then Just (cfgHandle cfg : friends) else Nothing
@@ -257,14 +257,16 @@ standingsTable s us = makeTable headers rows
 partyCell :: Party -> M.Map Handle User -> Cell
 partyCell Party {..} us = case partyMembers of
     [Member {..}] -> case M.lookup memberHandle us of
-        Nothing -> plainCell $ participant memberHandle
-        Just u  -> coloredCell (userColor u) (participant memberHandle)
+        Nothing -> plainCell $ participant $ unHandle memberHandle
+        Just u ->
+            coloredCell (userColor u) (participant $ unHandle memberHandle)
+
     ms -> case partyTeamName of
         Nothing       -> plainCell $ participant $ memberList ms
         Just teamName -> plainCell $ participant teamName
   where
     participant = fmtParticipation partyParticipantType
-    memberList  = T.intercalate "," . map memberHandle
+    memberList  = T.intercalate "," . map (unHandle . memberHandle)
     userColor   = convertRankColor . rankColor . getRank . userRating
 
 -- | 'fmtParticipation' @participantType text@ returns the @text@ with either a
@@ -314,7 +316,7 @@ printUser u = do
 
     putStrLn ""
     T.putStrLn $ rankColored (rankColor rank) $ T.concat
-        [indent, rankName rank, " ", userHandle u]
+        [indent, rankName rank, " ", unHandle $ userHandle u]
     whenJust (sequenceA [userFirstName u, userLastName u])
         $ \ns -> T.putStrLn $ indent <> T.unwords ns
 
@@ -420,11 +422,11 @@ userFriends :: UserConfig -> IO ()
 userFriends cfg = getFriends cfg >>= either printError printFriends
 
 printFriends :: [Handle] -> IO ()
-printFriends = mapM_ T.putStrLn
+printFriends = mapM_ (T.putStrLn . unHandle)
 
 --------------------------------------------------------------------------------
 
-virtualRating :: Int -> Handle -> Points -> Int -> IO ()
+virtualRating :: ContestId -> Handle -> Points -> Int -> IO ()
 virtualRating cId h pts pen = do
     calculateVirtualResult cId h pts pen >>= either printError printVirtualRes
 
@@ -450,21 +452,21 @@ printVirtualRes (u, Just VirtualResult {..}) = do
     T.putStrLn $ T.concat ["  ", indent, diffColored virtualDelta]
     putStrLn ""
 
-    let
-        desc = if currRank == newRank
+    let handle = unHandle (userHandle u)
+        desc   = if currRank == newRank
             then T.concat
                 [ "Would remain "
                 , rankName currRank
                 , " "
-                , rankColored (rankColor currRank) (userHandle u)
+                , rankColored (rankColor currRank) handle
                 ]
             else T.concat
                 [ "Would become "
                 , rankName newRank
                 , ": "
-                , rankColored (rankColor currRank) (userHandle u)
+                , rankColored (rankColor currRank) handle
                 , " -> "
-                , rankColored (rankColor newRank) (userHandle u)
+                , rankColored (rankColor newRank) handle
                 ]
     T.putStrLn $ T.concat ["  ", desc, "\n"]
 
@@ -514,7 +516,7 @@ coloredCell c = Cell [SetColor Foreground Dull c]
 blankCell :: Cell
 blankCell = plainCell ""
 
-ratingCell :: Int -> Cell
+ratingCell :: Rating -> Cell
 ratingCell x =
     let color = convertRankColor $ rankColor $ getRank x
     in coloredCell color (showText x)

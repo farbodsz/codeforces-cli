@@ -47,7 +47,7 @@ computeResults vu@VirtualUser {..} rcs rrs = calculateContestResults
 
 -- | 'previousRatings' @ratingChanges@ returns a map of each user's handle to
 -- their rating before the contest.
-previousRatings :: [RatingChange] -> M.Map Handle Int
+previousRatings :: [RatingChange] -> M.Map Handle Rating
 previousRatings = M.fromList . map (liftA2 (,) rcHandle rcOldRating)
 
 --------------------------------------------------------------------------------

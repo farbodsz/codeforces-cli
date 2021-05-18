@@ -25,14 +25,15 @@ import Data.Ord
 
 -- | 'calculateNewRatingChanges' @previousRatings updatedRankings@ computes the
 -- contest results.
-calculateContestResults :: M.Map Handle Int -> [RanklistRow] -> ContestResults
+calculateContestResults
+    :: M.Map Handle Rating -> [RanklistRow] -> ContestResults
 calculateContestResults hs rrs = ContestResults sortedCs deltas seeds
   where
     sortedCs        = reassignRanks $ mkContestants hs rrs
     (deltas, seeds) = process sortedCs
 
 -- | Constructs a list of contestants from the previous ratings and rankings.
-mkContestants :: M.Map Handle Int -> [RanklistRow] -> [Contestant]
+mkContestants :: M.Map Handle Rating -> [RanklistRow] -> [Contestant]
 mkContestants prevRatings = map
     (\RanklistRow {..} -> Contestant
         { contestantParty  = rrParty
@@ -48,7 +49,7 @@ mkContestants prevRatings = map
 --------------------------------------------------------------------------------
 
 -- | Initial rating of a member, if they do not already have a rating.
-initRating :: Int
+initRating :: Rating
 initRating = 0
 
 -- | Calculates the overall rating for a party using the ratings of its team
@@ -60,10 +61,10 @@ initRating = 0
 -- >>> computePartyRating [1400, 1500, 1600]
 -- 1749
 --
-computePartyRating :: [Int] -> Int
+computePartyRating :: [Rating] -> Rating
 computePartyRating ratings = go 20 100 4000
   where
-    go :: Int -> Float -> Float -> Int
+    go :: Int -> Float -> Float -> Rating
     go 0 l r = round $ (l + r) / 2
     go i l r
         | computed > mid = go (i - 1) mid r
@@ -77,7 +78,7 @@ computePartyRating ratings = go 20 100 4000
 --------------------------------------------------------------------------------
 
 -- | Ratings mapped to seed (expected ranking)
-type SeedCache = M.Map Int Seed
+type SeedCache = M.Map Rating Seed
 
 -- | Computes each party's rating delta and each rating's seed, given a list of
 -- contestants.
@@ -221,7 +222,7 @@ midRank c cs = do
 -- R : seed_i = m_i
 -- \]
 --
-calculateNeedRating :: [Contestant] -> Float -> State SeedCache Int
+calculateNeedRating :: [Contestant] -> Float -> State SeedCache Rating
 calculateNeedRating cs rank = go 1 8000
   where
     go l r
@@ -237,7 +238,7 @@ calculateNeedRating cs rank = go 1 8000
 
 -- | Looks up the seed for a given rating from the cache. If not found, computes
 -- it and updates the cache.
-getSeed :: Int -> [Contestant] -> State SeedCache Seed
+getSeed :: Rating -> [Contestant] -> State SeedCache Seed
 getSeed rating cs = do
     cache <- get
 
@@ -265,7 +266,7 @@ getSeedOf x ys = getSeed (contestantRating x) (filter (/= x) ys)
 -- The general idea is to increase the contestant's rating if their actual
 -- ranking is better than their seed, and decrease if worse.
 --
-calculateSeed :: Int -> [Contestant] -> Seed
+calculateSeed :: Rating -> [Contestant] -> Seed
 calculateSeed rating others =
     1 + sum [ getEloWinProbability' (contestantRating x) rating | x <- others ]
 
@@ -298,7 +299,7 @@ getEloWinProbability :: Float -> Float -> Float
 getEloWinProbability x y = 1 / (1 + 10 ** ((y - x) / 400))
 
 -- | Like 'getEloWinProbability' but takes 'Int's instead of 'Float's. 
-getEloWinProbability' :: Int -> Int -> Float
+getEloWinProbability' :: Rating -> Rating -> Float
 getEloWinProbability' x = getEloWinProbability (fromIntegral x) . fromIntegral
 
 --------------------------------------------------------------------------------

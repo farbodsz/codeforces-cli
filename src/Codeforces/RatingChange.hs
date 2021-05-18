@@ -12,13 +12,13 @@ import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
 --------------------------------------------------------------------------------
 
 data RatingChange = RatingChange
-    { rcContestId        :: Int
+    { rcContestId        :: ContestId
     , rcContestName      :: Text
     , rcHandle           :: Handle
     , rcRank             :: Int
     , rcRatingUpdateDate :: UTCTime
-    , rcOldRating        :: Int
-    , rcNewRating        :: Int
+    , rcOldRating        :: Rating
+    , rcNewRating        :: Rating
     }
     deriving Show
 
