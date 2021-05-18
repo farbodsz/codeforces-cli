@@ -45,7 +45,7 @@ module Codeforces
     , UserConfig(..)
     ) where
 
-import Codeforces.Common
+import Codeforces.API
 import Codeforces.Config
 import Codeforces.Contest
 import Codeforces.Party

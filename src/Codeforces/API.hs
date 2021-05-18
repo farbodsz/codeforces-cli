@@ -1,6 +1,6 @@
 --------------------------------------------------------------------------------
 
-module Codeforces.Common
+module Codeforces.API
     ( ResponseError(..)
     , getData
     , getAuthorizedData
