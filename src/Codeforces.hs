@@ -21,6 +21,8 @@ module Codeforces
     -- * Problems
     , getAllProblemData
     , getProblems
+    , getProblemStats
+    , getContestProblems
 
     -- * Ratings and ranks
     , getContestRatingChanges
@@ -67,10 +69,7 @@ import qualified Data.Text.Encoding as T
 
 --------------------------------------------------------------------------------
 
-getContests :: Bool -> IO (Either ResponseError [Contest])
-getContests isGym = getData "/contest.list" [("gym", argBool isGym)]
-
--- | Contains query parameters for retrieving contest standings.
+-- | Query parameters for retrieving contest standings.
 data StandingsParams = StandingsParams
     {
     -- | ID of the contest
@@ -88,6 +87,13 @@ data StandingsParams = StandingsParams
     , paramHandles    :: Maybe [Handle]
     }
     deriving Show
+
+--------------------------------------------------------------------------------
+
+-- | 'getContests' @isGym@ returns a list of contests that may or may not be gym
+-- contests.
+getContests :: Bool -> IO (Either ResponseError [Contest])
+getContests isGym = getData "/contest.list" [("gym", argBool isGym)]
 
 -- | 'getContestStandings' @standingsParams@ returns information about the
 -- contest and a part of the standings list.
@@ -134,6 +140,31 @@ getAllProblemData ts = getData "/problemset.problems" [("tags", argTags ts)]
 -- provided.
 getProblems :: [ProblemTag] -> IO (Either ResponseError [Problem])
 getProblems ts = fmap prProblems <$> getAllProblemData ts
+
+-- | Like 'getProblems' but returns a list of 'ProblemStats'.
+getProblemStats :: [ProblemTag] -> IO (Either ResponseError [ProblemStats])
+getProblemStats ts = fmap prStats <$> getAllProblemData ts
+
+-- | 'getContestProblems' @contestId@ returns the list of problems for the given
+-- contest.
+--
+-- This should be used instead of filtering results from 'getProblems' for two
+-- main reasons:
+--
+--     (1) 'problemContestId' can only refer to one contest, so problems
+--         appearing in multiple contests may not be filtered correctly.
+--     (2) 'getProblems' returns larger output potentially affecting performance
+--
+getContestProblems :: ContestId -> IO (Either ResponseError [Problem])
+getContestProblems cId = fmap standingsProblems <$> getContestStandings
+    StandingsParams
+        { paramContestId  = cId
+        , paramFrom       = Just 1
+        , paramRowCount   = Just 1
+        , paramRoom       = Nothing
+        , paramUnofficial = False
+        , paramHandles    = Nothing
+        }
 
 --------------------------------------------------------------------------------
 

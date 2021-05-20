@@ -12,8 +12,6 @@ import Control.Monad.Extra
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.Except
 
-import Data.Function (on)
-import Data.List (sortBy)
 import qualified Data.Map as M
 import Data.Maybe (fromMaybe)
 import Data.Text (Text)
@@ -101,36 +99,23 @@ printContestInfo
 printContestInfo cId cfg opts = do
     let handle = fromMaybe (cfgHandle cfg) (optHandle opts)
 
-    pr    <- ExceptT $ getAllProblemData []
-    allSs <- ExceptT $ getContestSubmissions cId handle
+    problems    <- ExceptT $ getContestProblems cId
+    stats       <- ExceptT $ fmap problemStatsMap <$> getProblemStats []
+    submissions <-
+        ExceptT $ fmap submissionsMap <$> getContestSubmissions cId handle
 
-    let ps      = contestProblems cId (prProblems pr)
-    let statMap = contestStats cId (prStats pr)
-    let subMap  = contestSubmissions allSs
+    lift $ printContestInfoTable problems submissions stats
 
-    lift $ printContestInfoTable ps subMap statMap
+-- | 'problemStatsMap' @stats@ computes a map of each problem's index to the
+-- corresponding 'ProblemStats' for it.
+problemStatsMap :: [ProblemStats] -> M.Map ProblemIndex ProblemStats
+problemStatsMap = M.fromList . map (pStatProblemIndex >>= (,))
 
--- | 'contestProblems' @contestId@ returns the problems in contest, sorted by
--- problem index ascending.
-contestProblems :: ContestId -> [Problem] -> [Problem]
-contestProblems cId = sortBy (compare `on` problemIndex)
-    . filter ((Just cId ==) . problemContestId)
-
--- | contestStats @contestId stats@ computes all problems in the contest with
--- @contestId@ returns a map of each contest problem's index to its statistics.
-contestStats :: ContestId -> [ProblemStats] -> M.Map ProblemIndex ProblemStats
-contestStats cId stats =
-    let
-        inContest = filter ((Just cId ==) . pStatContestId) stats
-        pairs     = map (\x -> (pStatProblemIndex x, x)) inContest
-    in M.fromList pairs
-
--- | 'contestSubmissions' @submissions@ computes a map of each problem's index
--- to the most recent submission for it.
-contestSubmissions :: [Submission] -> M.Map ProblemIndex Submission
-contestSubmissions ss =
-    let pairs = map (\s -> (problemIndex (submissionProblem s), s)) ss
-    in M.fromListWith (const id) pairs
+-- | 'submissionsMap' @submissions@ computes a map of each problem's index to
+-- the most recent submission for it.
+submissionsMap :: [Submission] -> M.Map ProblemIndex Submission
+submissionsMap =
+    M.fromListWith (const id) . map (problemIndex . submissionProblem >>= (,))
 
 -- | 'printContestInfoTable' @problems submissions statistics@ prints a table
 -- of problems in this contest, each of which with the problem statistics, and

@@ -22,6 +22,11 @@ instance FromJSON ProblemType where
 
 data Problem = Problem
     { problemContestId :: Maybe ContestId
+    -- ^ ID of /a/ contest containing the problem.
+    --
+    -- Note that a problem may appear in multiple contests (such as Div. 1 and
+    -- Div. 2 variants of a contest), but this field only contains one.
+    --
     , problemSetName   :: Maybe Text
     , problemIndex     :: ProblemIndex
     , problemName      :: Text
