@@ -37,7 +37,7 @@ contestList ContestOpts {..} = handleE $ runExceptT $ do
         rows    = map
             (\Contest {..} ->
                 plainCell
-                    <$> [ showText contestId
+                    <$> [ showText $ unContestId contestId
                         , contestName
                         , fmtStartTime contestStartTime
                         , fmtDuration contestDuration

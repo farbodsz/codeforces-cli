@@ -31,7 +31,7 @@ virtualRating :: ContestId -> Handle -> Points -> Int -> IO ()
 virtualRating cId h pts pen = handleE $ runExceptT $ do
     (u, mRes) <- ExceptT $ calculateVirtualResult cId h pts pen
 
-    lift $ runExceptT $ case mRes of
+    lift $ handleE $ runExceptT $ case mRes of
         Nothing  -> throwE VirtualNoResult
         Just res -> lift $ printVirtualRes u res
 

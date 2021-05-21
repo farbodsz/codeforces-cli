@@ -42,7 +42,7 @@ standingsList cId cfg StandingOpts {..} = handleE $ runExceptT $ do
 
     let mHs = if optFriends then Just (cfgHandle cfg : friends) else Nothing
 
-    (ss, rcs) <- ExceptT $ getContestStandings' StandingsParams
+    (standings, rcs) <- ExceptT $ getContestStandings' StandingsParams
         { paramContestId  = cId
         , paramFrom       = Just optFromIndex
         , paramRowCount   = Just optRowCount
@@ -51,14 +51,14 @@ standingsList cId cfg StandingOpts {..} = handleE $ runExceptT $ do
         , paramHandles    = mHs
         }
 
-    lift $ runExceptT $ if null rcs
+    lift $ handleE $ runExceptT $ if null (standingsRanklist standings)
         then
             throwE
                 (if optFriends
                     then StandingsWithFriendsEmpty
                     else StandingsEmpty
                 )
-        else lift $ mapM_ T.putStrLn $ standingsTable ss rcs
+        else lift $ mapM_ T.putStrLn $ standingsTable standings rcs
 
 standingsTable :: Standings -> M.Map Handle RatingChange -> Table
 standingsTable s rcs = makeTable headers rows
