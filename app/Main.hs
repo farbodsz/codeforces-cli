@@ -19,6 +19,8 @@ import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import Data.Time
 
+import Error
+
 import System.Console.ANSI
 
 import Table
@@ -53,10 +55,23 @@ main = do
 --------------------------------------------------------------------------------
 
 contestList :: ContestOpts -> IO ()
-contestList ContestOpts {..} = do
-    contests <- getContests optIsGym
-    now      <- getCurrentTime
-    either printError (printContests . filterContests optIsPast now) contests
+contestList ContestOpts {..} = handleE $ runExceptT $ do
+    contests <- ExceptT $ getContests optIsGym
+    now      <- lift $ getCurrentTime
+
+    let headers = [("#", 4), ("Name", 50), ("Date", 16), ("Duration", 10)]
+        rows    = map
+            (\Contest {..} ->
+                plainCell
+                    <$> [ showText contestId
+                        , contestName
+                        , fmtStartTime contestStartTime
+                        , fmtDuration contestDuration
+                        ]
+            )
+            (filterContests optIsPast now contests)
+
+    lift $ mapM_ T.putStrLn $ makeTable headers rows
 
 -- | 'filterContests' @onlyPast currentTime@ filters and orders a list of
 -- contests depending on whether past or upcoming should be displayed.
@@ -70,33 +85,17 @@ filterContests past now = if past
         Nothing -> False
         Just t  -> t < now
 
-printContests :: [Contest] -> IO ()
-printContests cs = forM_ (makeTable headers rows) T.putStrLn
-  where
-    headers = [("#", 4), ("Name", 50), ("Date", 16), ("Duration", 10)]
-    rows    = map
-        (\Contest {..} ->
-            plainCell
-                <$> [ showText contestId
-                    , contestName
-                    , fmtStartTime contestStartTime
-                    , fmtDuration contestDuration
-                    ]
-        )
-        cs
-    fmtStartTime =
-        maybe "" (T.pack . formatTime defaultTimeLocale "%H:%M  %d-%b-%y")
-    fmtDuration = T.pack . formatTime defaultTimeLocale "%h:%0M hrs"
+fmtStartTime :: Maybe UTCTime -> Text
+fmtStartTime =
+    maybe "" (T.pack . formatTime defaultTimeLocale "%H:%M  %d-%b-%y")
+
+fmtDuration :: DiffTime -> Text
+fmtDuration = T.pack . formatTime defaultTimeLocale "%h:%0M hrs"
 
 --------------------------------------------------------------------------------
 
 contestInfo :: ContestId -> UserConfig -> InfoOpts -> IO ()
-contestInfo cId cfg opts =
-    runExceptT (printContestInfo cId cfg opts) >>= either printError pure
-
-printContestInfo
-    :: ContestId -> UserConfig -> InfoOpts -> ExceptT ResponseError IO ()
-printContestInfo cId cfg opts = do
+contestInfo cId cfg opts = handleE $ runExceptT $ do
     let handle = fromMaybe (cfgHandle cfg) (optHandle opts)
 
     problems    <- ExceptT $ getContestProblems cId
@@ -168,36 +167,34 @@ openContest cId =
 --------------------------------------------------------------------------------
 
 problemList :: ProblemOpts -> IO ()
-problemList ProblemOpts {..} = problems >>= either printError printProblems
-  where
-    problems = fmap (filter inRatingRange) <$> getProblems []
-    inRatingRange p = case problemRating p of
-        Nothing -> False
-        Just r  -> optMinRating <= r && r <= optMaxRating
+problemList ProblemOpts {..} = handleE $ runExceptT $ do
+    let ratingBounds = inRatingRange (optMinRating, optMaxRating)
 
-printProblems :: [Problem] -> IO ()
-printProblems ps = forM_ (makeTable headers rows) T.putStrLn
-  where
-    headers = [("#", 6), ("Name", 40), ("Rating", 6)]
-    rows    = map
-        (\Problem {..} ->
-            [ plainCell $ maybe "" showText problemContestId <> problemIndex
-            , plainCell problemName
-            , maybe blankCell ratingCell problemRating
-            ]
-        )
-        ps
+    problems <- ExceptT $ fmap (filter ratingBounds) <$> getProblems []
+
+    let headers = [("#", 6), ("Name", 40), ("Rating", 6)]
+        rows    = map
+            (\Problem {..} ->
+                [ plainCell $ maybe "" showText problemContestId <> problemIndex
+                , plainCell problemName
+                , maybe blankCell ratingCell problemRating
+                ]
+            )
+            problems
+
+    lift $ mapM_ T.putStrLn $ makeTable headers rows
+
+inRatingRange :: (Rating, Rating) -> Problem -> Bool
+inRatingRange (minr, maxr) p = case problemRating p of
+    Nothing -> False
+    Just r  -> minr <= r && r <= maxr
 
 --------------------------------------------------------------------------------
 
 standingsList :: ContestId -> UserConfig -> StandingOpts -> IO ()
-standingsList cId cfg opts =
-    runExceptT (printStandings cId cfg opts) >>= either printError pure
-
-printStandings
-    :: ContestId -> UserConfig -> StandingOpts -> ExceptT ResponseError IO ()
-printStandings cId cfg StandingOpts {..} = do
+standingsList cId cfg StandingOpts {..} = handleE $ runExceptT $ do
     friends <- ExceptT $ getFriends cfg
+
     let mHs = if optFriends then Just (cfgHandle cfg : friends) else Nothing
 
     (ss, rcs) <- ExceptT $ getContestStandings' StandingsParams
@@ -214,7 +211,7 @@ printStandings cId cfg StandingOpts {..} = do
             then putStrLn
                 "Neither you nor your friends participated in this contest."
             else putStrLn "Standings empty."
-        else forM_ (standingsTable ss rcs) T.putStrLn
+        else mapM_ T.putStrLn $ standingsTable ss rcs
 
 standingsTable :: Standings -> M.Map Handle RatingChange -> Table
 standingsTable s rcs = makeTable headers rows
@@ -293,21 +290,21 @@ problemResultCell st pr@ProblemResult {..} = if prNotAttempted pr
 --------------------------------------------------------------------------------
 
 userInfo :: Handle -> IO ()
-userInfo h = getUser h >>= either printError printUser
+userInfo h = handleE $ runExceptT $ do
+    u <- ExceptT $ getUser h
 
-printUser :: User -> IO ()
-printUser u = do
     let rank = getRank (userRating u)
 
-    putStrLn ""
-    T.putStrLn $ rankColored (rankColor rank) $ T.concat
-        [indent, rankName rank, " ", unHandle $ userHandle u]
-    whenJust (sequenceA [userFirstName u, userLastName u])
-        $ \ns -> T.putStrLn $ indent <> T.unwords ns
+    lift $ do
+        putStrLn ""
+        T.putStrLn $ rankColored (rankColor rank) $ T.concat
+            [indent, rankName rank, " ", unHandle $ userHandle u]
+        whenJust (sequenceA [userFirstName u, userLastName u])
+            $ \ns -> T.putStrLn $ indent <> T.unwords ns
 
-    printRatings u
-    printPlace u
-    putStrLn ""
+        printRatings u
+        printPlace u
+        putStrLn ""
 
 printRatings :: User -> IO ()
 printRatings User {..} = do
@@ -340,60 +337,67 @@ indent = T.replicate 6 " "
 --------------------------------------------------------------------------------
 
 userRatings :: Handle -> IO ()
-userRatings h = getUserRatingHistory h >>= either printError printRatingChanges
+userRatings h = handleE $ runExceptT $ do
+    rcs <- ExceptT $ getUserRatingHistory h
 
-printRatingChanges :: [RatingChange] -> IO ()
-printRatingChanges rcs = forM_ (makeTable headers rows) T.putStrLn
-  where
-    headers =
-        [("#", 3), ("Contest", 50), ("Rank", 5), ("Change", 6), ("Rating", 6)]
-    rows = reverse $ zipWith
-        (\RatingChange {..} num ->
-            [ plainCell $ showText num
-            , plainCell rcContestName
-            , plainCell $ showText rcRank
-            , differenceCell (rcNewRating - rcOldRating)
-            , ratingCell rcNewRating
+    let headers =
+            [ ("#"      , 3)
+            , ("Contest", 50)
+            , ("Rank"   , 5)
+            , ("Change" , 6)
+            , ("Rating" , 6)
             ]
-        )
-        rcs
-        ([1 ..] :: [Int])
+        rows = reverse $ zipWith
+            (\RatingChange {..} num ->
+                [ plainCell $ showText num
+                , plainCell rcContestName
+                , plainCell $ showText rcRank
+                , differenceCell (rcNewRating - rcOldRating)
+                , ratingCell rcNewRating
+                ]
+            )
+            rcs
+            ([1 ..] :: [Int])
+
+    lift $ mapM_ T.putStrLn $ makeTable headers rows
 
 --------------------------------------------------------------------------------
 
 userStatus :: Handle -> StatusOpts -> IO ()
-userStatus h StatusOpts {..} =
-    getUserStatus h optStatusFrom optStatusCount
-        >>= either printError printSubmissions
+userStatus h StatusOpts {..} = handleE $ runExceptT $ do
+    ss <- ExceptT $ getUserStatus h optStatusFrom optStatusCount
 
-printSubmissions :: [Submission] -> IO ()
-printSubmissions ss = forM_ (makeTable headers rows) T.putStrLn
-  where
-    headers =
-        [ ("When"   , 12)
-        , ("Problem", 35)
-        , ("Lang"   , 11)
-        , ("Verdict", 35)
-        , ("Time"   , 7)
-        , ("Memory" , 8)
-        ]
-    rows = map
-        (\Submission {..} ->
-            [ plainCell $ fmtTime submissionTime
-            , plainCell $ fmtProblem submissionProblem
-            , plainCell submissionProgrammingLanguage
-            , verdictCell
-                submissionTestset
-                submissionPassedTestCount
-                submissionPoints
-                submissionVerdict
-            , plainCell $ fmtTimeConsumed submissionTimeConsumed
-            , plainCell $ fmtMemoryConsumed submissionMemoryConsumed
+    let headers =
+            [ ("When"   , 12)
+            , ("Problem", 35)
+            , ("Lang"   , 11)
+            , ("Verdict", 35)
+            , ("Time"   , 7)
+            , ("Memory" , 8)
             ]
-        )
-        ss
-    fmtTime = T.pack . formatTime defaultTimeLocale "%b/%d %H:%M"
-    fmtProblem p = T.concat [problemIndex p, " - ", problemName p]
+        rows = map
+            (\Submission {..} ->
+                [ plainCell $ fmtTime submissionTime
+                , plainCell $ fmtProblem submissionProblem
+                , plainCell submissionProgrammingLanguage
+                , verdictCell
+                    submissionTestset
+                    submissionPassedTestCount
+                    submissionPoints
+                    submissionVerdict
+                , plainCell $ fmtTimeConsumed submissionTimeConsumed
+                , plainCell $ fmtMemoryConsumed submissionMemoryConsumed
+                ]
+            )
+            ss
+
+    lift $ mapM_ T.putStrLn $ makeTable headers rows
+
+fmtTime :: UTCTime -> Text
+fmtTime = T.pack . formatTime defaultTimeLocale "%b/%d %H:%M"
+
+fmtProblem :: Problem -> Text
+fmtProblem p = T.concat [problemIndex p, " - ", problemName p]
 
 fmtTimeConsumed :: Int -> Text
 fmtTimeConsumed x = showText x <> " ms"
@@ -404,23 +408,25 @@ fmtMemoryConsumed x = showText (x `div` 1000) <> " KB"
 --------------------------------------------------------------------------------
 
 userFriends :: UserConfig -> IO ()
-userFriends cfg = getFriends cfg >>= either printError printFriends
-
-printFriends :: [Handle] -> IO ()
-printFriends = mapM_ (T.putStrLn . unHandle)
+userFriends cfg = handleE $ runExceptT $ do
+    fs <- ExceptT $ getFriends cfg
+    lift $ mapM_ (T.putStrLn . unHandle) fs
 
 --------------------------------------------------------------------------------
 
 virtualRating :: ContestId -> Handle -> Points -> Int -> IO ()
-virtualRating cId h pts pen = do
-    calculateVirtualResult cId h pts pen >>= either printError printVirtualRes
+virtualRating cId h pts pen = handleE $ runExceptT $ do
+    (u, mRes) <- ExceptT $ calculateVirtualResult cId h pts pen
 
-printVirtualRes :: (User, Maybe VirtualResult) -> IO ()
-printVirtualRes (_, Nothing) =
-    putStrLn
-        $  "An unexpected error occurred.\n"
-        ++ "Your rating change could not be calculated."
-printVirtualRes (u, Just VirtualResult {..}) = do
+    lift $ case mRes of
+        Nothing ->
+            putStrLn
+                $  "An unexpected error occurred.\n"
+                ++ "Your rating change could not be calculated."
+        Just res -> printVirtualRes u res
+
+printVirtualRes :: User -> VirtualResult -> IO ()
+printVirtualRes u VirtualResult {..} = do
     printRankings virtualSeed virtualRank
 
     putStrLn ""
