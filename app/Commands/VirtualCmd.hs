@@ -18,16 +18,22 @@ import Format
 
 --------------------------------------------------------------------------------
 
+data VirtualError = VirtualNoResult
+
+instance CodeforcesError VirtualError where
+    showE VirtualNoResult =
+        "An unexpected error occurred.\n"
+            ++ "Your rating change could not be calculated."
+
+--------------------------------------------------------------------------------
+
 virtualRating :: ContestId -> Handle -> Points -> Int -> IO ()
 virtualRating cId h pts pen = handleE $ runExceptT $ do
     (u, mRes) <- ExceptT $ calculateVirtualResult cId h pts pen
 
-    lift $ case mRes of
-        Nothing ->
-            putStrLn
-                $  "An unexpected error occurred.\n"
-                ++ "Your rating change could not be calculated."
-        Just res -> printVirtualRes u res
+    lift $ runExceptT $ case mRes of
+        Nothing  -> throwE VirtualNoResult
+        Just res -> lift $ printVirtualRes u res
 
 printVirtualRes :: User -> VirtualResult -> IO ()
 printVirtualRes u VirtualResult {..} = do

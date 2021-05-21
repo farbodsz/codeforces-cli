@@ -25,6 +25,17 @@ import Table
 
 --------------------------------------------------------------------------------
 
+data StandingsError
+    = StandingsEmpty
+    | StandingsWithFriendsEmpty
+
+instance CodeforcesError StandingsError where
+    showE StandingsEmpty = "Standings empty."
+    showE StandingsWithFriendsEmpty =
+        "Neither you nor your friends participated in this contest."
+
+--------------------------------------------------------------------------------
+
 standingsList :: ContestId -> UserConfig -> StandingOpts -> IO ()
 standingsList cId cfg StandingOpts {..} = handleE $ runExceptT $ do
     friends <- ExceptT $ getFriends cfg
@@ -40,12 +51,14 @@ standingsList cId cfg StandingOpts {..} = handleE $ runExceptT $ do
         , paramHandles    = mHs
         }
 
-    lift $ if null rcs
-        then if optFriends
-            then putStrLn
-                "Neither you nor your friends participated in this contest."
-            else putStrLn "Standings empty."
-        else mapM_ T.putStrLn $ standingsTable ss rcs
+    lift $ runExceptT $ if null rcs
+        then
+            throwE
+                (if optFriends
+                    then StandingsWithFriendsEmpty
+                    else StandingsEmpty
+                )
+        else lift $ mapM_ T.putStrLn $ standingsTable ss rcs
 
 standingsTable :: Standings -> M.Map Handle RatingChange -> Table
 standingsTable s rcs = makeTable headers rows
