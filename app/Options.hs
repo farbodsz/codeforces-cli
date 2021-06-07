@@ -59,6 +59,7 @@ data StandingOpts = StandingOpts
 data StatusOpts = StatusOpts
     { optStatusFrom  :: Int
     , optStatusCount :: Int
+    , optStatusWatch :: Bool
     }
     deriving Eq
 
@@ -227,7 +228,7 @@ statusP :: Parser Command
 statusP = StatusCmd <$> handleArg <*> statusOpts
 
 statusOpts :: Parser StatusOpts
-statusOpts = StatusOpts <$> fromOpt <*> countOpt
+statusOpts = StatusOpts <$> fromOpt <*> countOpt <*> watchOpt
 
 userP :: Parser Command
 userP = UserCmd <$> handleArg
@@ -271,5 +272,9 @@ countOpt = option
     <> value 40
     <> metavar "INT"
     )
+
+watchOpt :: Parser Bool
+watchOpt = switch $ long "watch" <> short 'w' <> help
+    "Watch this command and update output whenever it changes."
 
 --------------------------------------------------------------------------------
