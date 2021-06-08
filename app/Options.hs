@@ -54,6 +54,7 @@ data StandingOpts = StandingOpts
     , optRowCount       :: Int
     , optRoom           :: Maybe Int
     , optFriends        :: Bool
+    , optStandWatch     :: Bool
     }
     deriving Eq
 
@@ -225,6 +226,7 @@ standingOpts =
                        "If true then only you and your friends will be shown\
                            \ in the standings."
                 )
+        <*> watchOpt
 
 statusP :: Parser Command
 statusP = StatusCmd <$> handleArg <*> statusOpts
