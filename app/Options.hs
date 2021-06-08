@@ -37,7 +37,8 @@ data ContestOpts = ContestOpts
     deriving Eq
 
 data InfoOpts = InfoOpts
-    { optHandle :: Maybe Handle
+    { optHandle    :: Maybe Handle
+    , optInfoWatch :: Bool
     }
     deriving Eq
 
@@ -140,19 +141,20 @@ contestInfoP :: Parser Command
 contestInfoP = InfoCmd <$> contestIdArg <*> contestInfoOpts
 
 contestInfoOpts :: Parser InfoOpts
-contestInfoOpts = InfoOpts <$> optional
-    (   Handle
-    <$> (strOption
-            (  long "user"
-            <> short 'u'
-            <> help
-                   "Codeforces user handle. If specified, it shows the contest\
-                   \ details of another user. If not specified, your contest\
-                   \ details will be shown."
-            <> metavar "HANDLE"
-            )
-        )
-    )
+contestInfoOpts =
+    InfoOpts
+        <$> optional
+                (Handle <$> strOption
+                    (  long "user"
+                    <> short 'u'
+                    <> help
+                           "Codeforces user handle. If specified, it shows the\
+                           \ contest details of another user. If not specified,\
+                           \ your contest details will be shown."
+                    <> metavar "HANDLE"
+                    )
+                )
+        <*> watchOpt
 
 friendsP :: Parser Command
 friendsP = pure FriendsCmd
