@@ -13,27 +13,26 @@ import qualified Data.Text.IO as T
 
 import System.Console.ANSI
 
-import Error
 import Table
 
 --------------------------------------------------------------------------------
 
 -- | 'handleWatch' @shouldWatch m@ runs computation @m@ once if @shouldWatch@ is
 -- false, otherwise 'watchTable' watches it.
-handleWatch :: Bool -> IO (Either ResponseError Table) -> IO ()
+handleWatch :: Bool -> IO (Either CodeforcesError Table) -> IO ()
 handleWatch False m = m >>= either (putStrLn . showE) (mapM_ T.putStrLn)
 handleWatch True  m = evalStateT (watchTable 5 m) []
 
 -- | 'watchTable' @delaySecs m@ runs computation @m@ every @delaySecs@ amount of
 -- seconds. The terminal output from @m@ is changed if the next run of @m@
 -- yields a different result.
-watchTable :: Int -> IO (Either ResponseError Table) -> StateT Table IO ()
+watchTable :: Int -> IO (Either CodeforcesError Table) -> StateT Table IO ()
 watchTable delaySecs m = do
     currTable <- get
     result    <- lift m
 
     case result of
-        Left  e         -> lift $ print e
+        Left  e         -> lift $ putStrLn $ showE e
         Right nextTable -> if currTable == nextTable
             then pure ()
             else do

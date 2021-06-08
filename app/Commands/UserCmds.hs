@@ -19,7 +19,6 @@ import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import Data.Time
 
-import Error
 import Format
 import Options
 import Table
@@ -29,7 +28,7 @@ import Watcher
 
 userInfo :: Handle -> IO ()
 userInfo h = handleE $ runExceptT $ do
-    u <- ExceptT $ getUser h
+    u <- handleAPI $ getUser h
 
     let rank = getRank (userRating u)
 
@@ -73,7 +72,7 @@ printPlace User {..} = do
 
 userRatings :: Handle -> IO ()
 userRatings h = handleE $ runExceptT $ do
-    rcs <- ExceptT $ getUserRatingHistory h
+    rcs <- handleAPI $ getUserRatingHistory h
 
     let headers =
             [ ("#"      , 3)
@@ -101,9 +100,9 @@ userRatings h = handleE $ runExceptT $ do
 userStatus :: Handle -> StatusOpts -> IO ()
 userStatus h opts = handleWatch (optStatusWatch opts) (userStatusTable h opts)
 
-userStatusTable :: Handle -> StatusOpts -> IO (Either ResponseError Table)
+userStatusTable :: Handle -> StatusOpts -> IO (Either CodeforcesError Table)
 userStatusTable h StatusOpts {..} = runExceptT $ do
-    ss <- ExceptT $ getUserStatus h optStatusFrom optStatusCount
+    ss <- handleAPI $ getUserStatus h optStatusFrom optStatusCount
 
     let headers =
             [ ("When"   , 12)
@@ -141,7 +140,7 @@ fmtProblem p = T.concat [problemIndex p, " - ", problemName p]
 
 userFriends :: UserConfig -> IO ()
 userFriends cfg = handleE $ runExceptT $ do
-    fs <- ExceptT $ getFriends cfg
+    fs <- handleAPI $ getFriends cfg
     lift $ mapM_ (T.putStrLn . unHandle) fs
 
 --------------------------------------------------------------------------------

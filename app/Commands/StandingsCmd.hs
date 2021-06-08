@@ -15,7 +15,6 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 
-import Error
 import Format
 import Options
 
@@ -25,24 +24,13 @@ import Table
 
 --------------------------------------------------------------------------------
 
-data StandingsError
-    = StandingsEmpty
-    | StandingsWithFriendsEmpty
-
-instance CodeforcesError StandingsError where
-    showE StandingsEmpty = "Standings empty."
-    showE StandingsWithFriendsEmpty =
-        "Neither you nor your friends participated in this contest."
-
---------------------------------------------------------------------------------
-
 standingsList :: ContestId -> UserConfig -> StandingOpts -> IO ()
 standingsList cId cfg StandingOpts {..} = handleE $ runExceptT $ do
-    friends <- ExceptT $ getFriends cfg
+    friends <- handleAPI $ getFriends cfg
 
     let mHs = if optFriends then Just (cfgHandle cfg : friends) else Nothing
 
-    (standings, rcs) <- ExceptT $ getContestStandings' StandingsParams
+    (standings, rcs) <- handleAPI $ getContestStandings' StandingsParams
         { paramContestId  = cId
         , paramFrom       = Just optFromIndex
         , paramRowCount   = Just optRowCount
@@ -51,7 +39,7 @@ standingsList cId cfg StandingOpts {..} = handleE $ runExceptT $ do
         , paramHandles    = mHs
         }
 
-    lift $ handleE $ runExceptT $ if null (standingsRanklist standings)
+    if null (standingsRanklist standings)
         then
             throwE
                 (if optFriends

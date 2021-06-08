@@ -13,25 +13,15 @@ import Control.Monad.Trans.Except
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 
-import Error
 import Format
-
---------------------------------------------------------------------------------
-
-data VirtualError = VirtualNoResult
-
-instance CodeforcesError VirtualError where
-    showE VirtualNoResult =
-        "An unexpected error occurred.\n"
-            ++ "Your rating change could not be calculated."
 
 --------------------------------------------------------------------------------
 
 virtualRating :: ContestId -> Handle -> Points -> Int -> IO ()
 virtualRating cId h pts pen = handleE $ runExceptT $ do
-    (u, mRes) <- ExceptT $ calculateVirtualResult cId h pts pen
+    (u, mRes) <- handleAPI $ calculateVirtualResult cId h pts pen
 
-    lift $ handleE $ runExceptT $ case mRes of
+    case mRes of
         Nothing  -> throwE VirtualNoResult
         Just res -> lift $ printVirtualRes u res
 

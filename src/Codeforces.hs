@@ -2,6 +2,7 @@
 
 module Codeforces
     ( module Codeforces.Contest
+    , module Codeforces.Error
     , module Codeforces.Party
     , module Codeforces.Problem
     , module Codeforces.Rank
@@ -11,6 +12,7 @@ module Codeforces
     , module Codeforces.Types
     , module Codeforces.User
     , ResponseError(..)
+    , handleAPI
 
     -- * Contests
     , getContests
@@ -50,6 +52,7 @@ module Codeforces
 import Codeforces.API
 import Codeforces.Config
 import Codeforces.Contest
+import Codeforces.Error
 import Codeforces.Party
 import Codeforces.Problem
 import Codeforces.Rank
@@ -60,12 +63,18 @@ import Codeforces.Types
 import Codeforces.User
 import Codeforces.Virtual
 
+import Control.Arrow (left)
 import Control.Monad.Trans.Except
 
 import qualified Data.ByteString.Char8 as BC
 import qualified Data.Map as M
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
+
+--------------------------------------------------------------------------------
+
+handleAPI :: IO (Either ResponseError a) -> ExceptT CodeforcesError IO a
+handleAPI m = ExceptT $ left ResponseError <$> m
 
 --------------------------------------------------------------------------------
 

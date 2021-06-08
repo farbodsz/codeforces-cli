@@ -19,7 +19,6 @@ import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import Data.Time
 
-import Error
 import Format
 import Options
 import Table
@@ -31,7 +30,7 @@ import Web.Browser
 
 contestList :: ContestOpts -> IO ()
 contestList ContestOpts {..} = handleE $ runExceptT $ do
-    contests <- ExceptT $ getContests optIsGym
+    contests <- handleAPI $ getContests optIsGym
     now      <- lift getCurrentTime
 
     let headers = [("#", 4), ("Name", 50), ("Date", 16), ("Duration", 10)]
@@ -80,13 +79,14 @@ contestInfo cId cfg opts =
 -- their submission verdict for the problem.
 --
 contestInfoTable
-    :: ContestId -> UserConfig -> InfoOpts -> IO (Either ResponseError Table)
+    :: ContestId -> UserConfig -> InfoOpts -> IO (Either CodeforcesError Table)
 contestInfoTable cId cfg opts = runExceptT $ do
     let handle = fromMaybe (cfgHandle cfg) (optHandle opts)
 
-    ps <- ExceptT $ getContestProblems cId
-    statMap <- ExceptT $ fmap problemStatsMap <$> getProblemStats []
-    subMap <- ExceptT $ fmap submissionsMap <$> getContestSubmissions cId handle
+    ps      <- handleAPI $ getContestProblems cId
+    statMap <- handleAPI $ fmap problemStatsMap <$> getProblemStats []
+    subMap  <-
+        handleAPI $ fmap submissionsMap <$> getContestSubmissions cId handle
 
     let headers =
             [ ("#"      , 2)
