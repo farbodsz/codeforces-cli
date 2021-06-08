@@ -99,41 +99,37 @@ userRatings h = handleE $ runExceptT $ do
 --------------------------------------------------------------------------------
 
 userStatus :: Handle -> StatusOpts -> IO ()
-userStatus h opts = handleWatch (optStatusWatch opts) (makeStatusTable h opts)
+userStatus h opts = handleWatch (optStatusWatch opts) (userStatusTable h opts)
 
-makeStatusTable :: Handle -> StatusOpts -> IO (Either ResponseError Table)
-makeStatusTable h StatusOpts {..} = runExceptT $ do
+userStatusTable :: Handle -> StatusOpts -> IO (Either ResponseError Table)
+userStatusTable h StatusOpts {..} = runExceptT $ do
     ss <- ExceptT $ getUserStatus h optStatusFrom optStatusCount
-    pure $ userStatusTable ss
 
-userStatusTable :: [Submission] -> Table
-userStatusTable ss = makeTable headers rows
-  where
-    headers =
-        [ ("When"   , 12)
-        , ("Problem", 35)
-        , ("Lang"   , 11)
-        , ("Verdict", 35)
-        , ("Time"   , 7)
-        , ("Memory" , 8)
-        ]
-    rows = map
-        (\Submission {..} ->
-            [ plainCell $ fmtTime submissionTime
-            , plainCell $ fmtProblem submissionProblem
-            , plainCell submissionProgrammingLanguage
-            , verdictCell
-                submissionTestset
-                submissionPassedTestCount
-                submissionPoints
-                submissionVerdict
-            , plainCell $ fmtTimeConsumed submissionTimeConsumed
-            , plainCell $ fmtMemoryConsumed submissionMemoryConsumed
+    let headers =
+            [ ("When"   , 12)
+            , ("Problem", 35)
+            , ("Lang"   , 11)
+            , ("Verdict", 35)
+            , ("Time"   , 7)
+            , ("Memory" , 8)
             ]
-        )
-        ss
+        rows = map
+            (\Submission {..} ->
+                [ plainCell $ fmtTime submissionTime
+                , plainCell $ fmtProblem submissionProblem
+                , plainCell submissionProgrammingLanguage
+                , verdictCell
+                    submissionTestset
+                    submissionPassedTestCount
+                    submissionPoints
+                    submissionVerdict
+                , plainCell $ fmtTimeConsumed submissionTimeConsumed
+                , plainCell $ fmtMemoryConsumed submissionMemoryConsumed
+                ]
+            )
+            ss
 
-
+    pure $ makeTable headers rows
 
 fmtTime :: UTCTime -> Text
 fmtTime = T.pack . formatTime defaultTimeLocale "%b/%d %H:%M"
