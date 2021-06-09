@@ -27,6 +27,7 @@ dependencies:
   - containers
   - cryptohash-sha512
   - directory
+  - http-client
   - http-conduit
   - http-types
   - random

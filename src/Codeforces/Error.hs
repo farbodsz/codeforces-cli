@@ -17,7 +17,7 @@ data CodeforcesError
     | VirtualNoResult
 
 showE :: CodeforcesError -> String
-showE (ResponseError e) = show e
+showE (ResponseError e) = API.responseErrorMsg e
 showE StandingsEmpty    = "Standings empty."
 showE StandingsWithFriendsEmpty =
     "Neither you nor your friends participated in this contest."
