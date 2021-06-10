@@ -42,8 +42,9 @@ initWatchState = WatchState [] Nothing
 -- watching data.
 --
 handleWatch :: Bool -> IO (Either CodeforcesError Table) -> IO ()
-handleWatch False m = m >>= either (putStrLn . showE) (mapM_ T.putStrLn)
-handleWatch True  m = withDisabledStdin $ do
+handleWatch False m =
+    m >>= either (putStrLn . elErrorMsg . showE) (mapM_ T.putStrLn)
+handleWatch True m = withDisabledStdin $ do
     resetScreen
     evalStateT (watchTable 2 m) initWatchState
 
@@ -106,7 +107,7 @@ addInfo table me now lastUpdate =
   where
     statusMsg = T.concat $ catMaybes [errorMsg, updateMsg]
 
-    errorMsg  = colored Red . (<> " ") . T.pack . showE <$> me
+    errorMsg  = colored Red . (<> ". ") . T.pack . elErrorMsg . showE <$> me
     updateMsg = T.concat <$> sequenceA
         [Just "Last update: ", fmtDiffTime <$> (diffUTCTime now <$> lastUpdate)]
 

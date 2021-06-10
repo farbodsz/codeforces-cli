@@ -8,6 +8,7 @@ module Codeforces.API
     ) where
 
 import Codeforces.Config
+import Codeforces.Logging
 
 import Control.Exception (try)
 
@@ -61,19 +62,19 @@ data ResponseError
 
 -- | Converts a 'ResponseError' to a friendly error message to display, and
 -- details that can be logged separately.
-responseErrorMsg :: ResponseError -> String
-responseErrorMsg (ApiFail   e) = e
-responseErrorMsg (JsonError e) = "Couldn't parse result:\n" <> show e
+responseErrorMsg :: ResponseError -> ErrorLog
+responseErrorMsg (ApiFail   e) = mkErrorLog e
+responseErrorMsg (JsonError e) = "Couldn't parse result" <~> show e
 responseErrorMsg (HttpError e) = case e of
     HttpExceptionRequest _ content -> case content of
         StatusCodeException resp _ ->
-            "HTTP " <> show (getResponseStatusCode resp)
-        TooManyRedirects resps -> "Too many redirects:\n" <> show resps
-        ConnectionTimeout      -> "Connection timeout"
-        ConnectionFailure e2   -> "Connection failure:\n" <> show e2
-        other                  -> show other
+            mkErrorLog $ "HTTP " <> show (getResponseStatusCode resp)
+        TooManyRedirects resps -> "Too many redirects" <~> show resps
+        ConnectionTimeout      -> mkErrorLog "Connection timeout"
+        ConnectionFailure e2   -> "Connection failure" <~> show e2
+        other                  -> "HTTP error" <~> show other
     InvalidUrlException url reason ->
-        "Invalid URL!\n" <> url <> "\nfor " <> reason
+        "Invalid URL" <~> (url <> "\nfor " <> reason)
 
 --------------------------------------------------------------------------------
 

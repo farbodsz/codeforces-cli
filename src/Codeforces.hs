@@ -3,6 +3,7 @@
 module Codeforces
     ( module Codeforces.Contest
     , module Codeforces.Error
+    , module Codeforces.Logging
     , module Codeforces.Party
     , module Codeforces.Problem
     , module Codeforces.Rank
@@ -53,6 +54,7 @@ import Codeforces.API
 import Codeforces.Config
 import Codeforces.Contest
 import Codeforces.Error
+import Codeforces.Logging
 import Codeforces.Party
 import Codeforces.Problem
 import Codeforces.Rank

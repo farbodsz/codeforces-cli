@@ -6,6 +6,7 @@
 module Codeforces.Error where
 
 import qualified Codeforces.API as API
+import Codeforces.Logging
 
 --------------------------------------------------------------------------------
 
@@ -16,13 +17,16 @@ data CodeforcesError
     | StandingsWithFriendsEmpty
     | VirtualNoResult
 
-showE :: CodeforcesError -> String
+-- | Returns a human-friendly error message with error details.
+showE :: CodeforcesError -> ErrorLog
 showE (ResponseError e) = API.responseErrorMsg e
-showE StandingsEmpty    = "Standings empty."
+showE StandingsEmpty    = mkErrorLog "Standings empty."
 showE StandingsWithFriendsEmpty =
-    "Neither you nor your friends participated in this contest."
+    mkErrorLog "Neither you nor your friends participated in this contest."
 showE VirtualNoResult =
-    "An unexpected error occurred.\nYour rating change could not be calculated."
+    mkErrorLog
+        "An unexpected error occurred.\
+            \ Your rating change could not be calculated."
 
 --------------------------------------------------------------------------------
 
@@ -30,7 +34,7 @@ showE VirtualNoResult =
 -- 'CodeforcesError'. If an error is encountered, its error message is printed.
 handleE :: IO (Either CodeforcesError a) -> IO ()
 handleE m = m >>= \case
-    Left  e -> putStrLn $ showE e
+    Left  e -> putStrLn . elErrorMsg . showE $ e
     Right _ -> pure ()
 
 --------------------------------------------------------------------------------
