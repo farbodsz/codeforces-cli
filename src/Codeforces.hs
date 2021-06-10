@@ -50,7 +50,7 @@ module Codeforces
     , UserConfig(..)
     ) where
 
-import Codeforces.API
+import Codeforces.Response
 import Codeforces.Config
 import Codeforces.Contest
 import Codeforces.Error

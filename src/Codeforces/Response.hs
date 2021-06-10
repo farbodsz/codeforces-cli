@@ -1,6 +1,6 @@
 --------------------------------------------------------------------------------
 
-module Codeforces.API
+module Codeforces.Response
     ( ResponseError(..)
     , responseErrorMsg
     , getData
