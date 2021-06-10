@@ -1,6 +1,6 @@
 --------------------------------------------------------------------------------
 
-module Config
+module Codeforces.App.Config
     ( loadConfig
     , setupConfig
     ) where

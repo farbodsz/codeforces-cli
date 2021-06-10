@@ -1,7 +1,7 @@
 --------------------------------------------------------------------------------
 
 -- | User-related commands.
-module Commands.UserCmds
+module Codeforces.App.Commands.UserCmds
     ( userInfo
     , userRatings
     , userStatus
@@ -9,6 +9,11 @@ module Commands.UserCmds
     ) where
 
 import Codeforces
+
+import Codeforces.App.Format
+import Codeforces.App.Options
+import Codeforces.App.Table
+import Codeforces.App.Watcher
 
 import Control.Monad.Extra
 import Control.Monad.Trans.Class
@@ -18,11 +23,6 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import Data.Time
-
-import Format
-import Options
-import Table
-import Watcher
 
 --------------------------------------------------------------------------------
 

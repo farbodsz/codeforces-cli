@@ -1,6 +1,6 @@
 --------------------------------------------------------------------------------
 
-module Table
+module Codeforces.App.Table
     ( Cell(..)
     , Row
     , Table

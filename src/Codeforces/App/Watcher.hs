@@ -1,8 +1,11 @@
 --------------------------------------------------------------------------------
 
-module Watcher where
+module Codeforces.App.Watcher where
 
 import Codeforces hiding (RankColor(..))
+
+import Codeforces.App.Format
+import Codeforces.App.Table
 
 import Control.Concurrent
 import Control.Exception (bracket)
@@ -15,12 +18,8 @@ import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import Data.Time
 
-import Format
-
 import System.Console.ANSI
 import System.IO
-
-import Table
 
 --------------------------------------------------------------------------------
 

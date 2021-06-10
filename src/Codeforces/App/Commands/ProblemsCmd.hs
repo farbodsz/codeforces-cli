@@ -1,21 +1,21 @@
 --------------------------------------------------------------------------------
 
 -- | Problems command.
-module Commands.ProblemsCmd
+module Codeforces.App.Commands.ProblemsCmd
     ( problemList
     ) where
 
 import Codeforces
+
+import Codeforces.App.Format
+import Codeforces.App.Options
+import Codeforces.App.Table
 
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.Except
 
 import Data.Text (Text)
 import qualified Data.Text.IO as T
-
-import Format
-import Options
-import Table
 
 --------------------------------------------------------------------------------
 

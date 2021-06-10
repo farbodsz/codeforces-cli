@@ -1,10 +1,12 @@
 --------------------------------------------------------------------------------
 
 -- | Utility functions for formatting data.
-module Format where
+module Codeforces.App.Format where
 
 import Codeforces hiding (RankColor(..))
 import qualified Codeforces.Rank as R
+
+import Codeforces.App.Table
 
 import Data.Fixed
 import Data.Text (Text)
@@ -12,8 +14,6 @@ import qualified Data.Text as T
 import Data.Time
 
 import System.Console.ANSI
-
-import Table
 
 --------------------------------------------------------------------------------
 
