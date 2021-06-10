@@ -17,7 +17,8 @@ import Options.Applicative
 --------------------------------------------------------------------------------
 
 data Command
-    = ContestsCmd ContestOpts
+    = AgendaCmd
+    | ContestsCmd ContestOpts
     | FriendsCmd
     | InfoCmd ContestId InfoOpts
     | OpenCmd ContestId
@@ -31,8 +32,9 @@ data Command
     deriving Eq
 
 data ContestOpts = ContestOpts
-    { optIsGym  :: Bool
-    , optIsPast :: Bool
+    { optIsGym      :: Bool
+    , optIsPast     :: Bool
+    , optIsUpcoming :: Bool
     }
     deriving Eq
 
@@ -77,8 +79,12 @@ commandP :: Parser Command
 commandP =
     hsubparser
         $  command
-               "contests"
-               (info contestsP (progDesc "Upcoming or past contests"))
+               "agenda"
+               (info
+                   agendaP
+                   (progDesc "Upcoming contests. Alias for contests --upcoming")
+               )
+        <> command "contests" (info contestsP (progDesc "List of contests"))
         <> command
                "info"
                (info
@@ -122,6 +128,9 @@ commandP =
                    )
                )
 
+agendaP :: Parser Command
+agendaP = pure AgendaCmd
+
 contestsP :: Parser Command
 contestsP =
     fmap ContestsCmd
@@ -133,10 +142,15 @@ contestsP =
                        "If true then gym contests are returned,\
                        \ otherwise, just regular contests are shown."
                 )
+        <*> switch (long "past" <> short 'p' <> help "Show only past contests.")
         <*> switch
-                (long "past" <> short 'p' <> help
-                    "Displays past contests instead of upcoming contests."
+                (  long "upcoming"
+                <> short 'u'
+                <> help
+                       "Show only upcoming contests.\
+                           \ This can also be done with the `agenda` command."
                 )
+
 
 contestInfoP :: Parser Command
 contestInfoP = InfoCmd <$> contestIdArg <*> contestInfoOpts

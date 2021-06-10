@@ -43,21 +43,22 @@ contestList ContestOpts {..} = handleE $ runExceptT $ do
                         , fmtDuration contestDuration
                         ]
             )
-            (filterContests optIsPast now contests)
+            (filterContests optIsPast optIsUpcoming now contests)
 
     lift $ mapM_ T.putStrLn $ makeTable headers rows
 
--- | 'filterContests' @onlyPast currentTime@ filters and orders a list of
--- contests depending on whether past or upcoming should be displayed.
-filterContests :: Bool -> UTCTime -> [Contest] -> [Contest]
-filterContests past now = if past
-    then filter isContestPast
-    else reverse . filter (not . isContestPast)
-  where
-    isContestPast :: Contest -> Bool
-    isContestPast c = case contestStartTime c of
-        Nothing -> False
-        Just t  -> t < now
+-- | 'filterContests' @onlyPast onlyUpcoming currentTime@ filters and orders a
+-- list of contests depending on whether past or upcoming (or both/all) contests
+-- should be shown.
+filterContests :: Bool -> Bool -> UTCTime -> [Contest] -> [Contest]
+filterContests False False _   = id
+filterContests False True  now = reverse . filter (not . isContestPast now)
+filterContests True  False now = filter (isContestPast now)
+filterContests True  True  _   = id
+
+-- | Whether the contest is in the past relative to the given time.
+isContestPast :: UTCTime -> Contest -> Bool
+isContestPast now c = maybe False (< now) (contestStartTime c)
 
 fmtStartTime :: Maybe UTCTime -> Text
 fmtStartTime =

@@ -15,6 +15,7 @@ main = do
 
     case command of
         -- List/tabulate data
+        AgendaCmd                -> contestList (ContestOpts False False True)
         ContestsCmd opts         -> contestList opts
         InfoCmd cId opts         -> contestInfo cId config opts
         ProblemsCmd opts         -> problemList opts
