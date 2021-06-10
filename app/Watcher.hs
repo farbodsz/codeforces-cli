@@ -24,6 +24,17 @@ import Table
 
 --------------------------------------------------------------------------------
 
+-- | Values used for watching output.
+data WatchState = WatchState
+    { wsTable      :: Table
+    , wsUpdateTime :: Maybe UTCTime
+    }
+
+initWatchState :: WatchState
+initWatchState = WatchState [] Nothing
+
+--------------------------------------------------------------------------------
+
 -- | 'handleWatch' @shouldWatch m@ runs computation @m@ once if @shouldWatch@ is
 -- false, otherwise 'watchTable' watches it.
 --
@@ -34,7 +45,7 @@ handleWatch :: Bool -> IO (Either CodeforcesError Table) -> IO ()
 handleWatch False m = m >>= either (putStrLn . showE) (mapM_ T.putStrLn)
 handleWatch True  m = withDisabledStdin $ do
     resetScreen
-    evalStateT (watchTable 2 m) ([], Nothing)
+    evalStateT (watchTable 2 m) initWatchState
 
 -- | 'watchTable' @delaySecs m@ runs computation @m@ every @delaySecs@ amount of
 -- seconds. The terminal output from @m@ is changed if the next run of @m@
@@ -42,31 +53,28 @@ handleWatch True  m = withDisabledStdin $ do
 watchTable
     :: Int                                  -- ^ Delay, in seconds.
     -> IO (Either CodeforcesError Table)    -- ^ Fetches an updated table.
-    -> StateT (Table, Maybe UTCTime) IO ()  -- ^ Table and last update time.
+    -> StateT WatchState IO ()              -- ^ Data from previous iteration.
 watchTable delaySecs m = do
-    (oldTable, lastUpdate) <- get
-    now                    <- lift getCurrentTime
+    oldState    <- get
+    now         <- lift getCurrentTime
 
-    let currUpdate = Just now
+    tableOutput <- lift m >>= \case
+        Left e -> do
+            -- Include error message but table data remains the same
+            let oldTable   = wsTable oldState
+                lastUpdate = wsUpdateTime oldState
 
-    -- Fetch updated table and add information rows
-    (newTable, updateTime) <- lift m >>= \case
-        Left  e -> pure (addInfo oldTable (Just e) now lastUpdate, lastUpdate)
-        Right t -> pure (addInfo t Nothing now currUpdate, currUpdate)
+            pure $ addInfo oldTable (Just e) now lastUpdate
 
-    -- Truncate table height to terminal height if possible
-    -- (getTerminalSize not supported on some Windows terminals)
-    mTermSize <- lift getTerminalSize
-    let newTable' = case mTermSize of
-            Nothing     -> newTable
-            Just (h, _) -> take (h - 1) newTable
+        Right newTable -> do
+            let currUpdate = Just now
+            put $ WatchState newTable currUpdate
 
-    -- Print/store currently displayed table with the time it was retrieved
-    put (newTable', updateTime)
+            pure $ addInfo newTable Nothing now currUpdate
 
     lift $ do
         setCursorPosition 0 0
-        forM_ newTable' $ \r -> clearLine >> T.putStrLn r
+        forM_ tableOutput $ \r -> clearLine >> T.putStrLn r
 
         threadDelay (delaySecs * 1000000)
 
