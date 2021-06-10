@@ -11,6 +11,9 @@ module Codeforces.App.Options
     ) where
 
 import           Codeforces.Types
+import           Paths_codeforces_cli           ( version )
+
+import           Data.Version                   ( showVersion )
 
 import           Options.Applicative
 
@@ -73,7 +76,17 @@ parseCommands :: IO Command
 parseCommands = execParser opts
 
 opts :: ParserInfo Command
-opts = info (commandP <**> helper) (header "Codeforces CLI" <> fullDesc)
+opts = info (commandP <**> helper) (appHeader <> fullDesc)
+
+-- | CLI name and version number.
+appHeader :: InfoMod Command
+appHeader = header $ "Codeforces CLI v" ++ appVersion
+
+-- | Version number of the CLI.
+appVersion :: String
+appVersion = showVersion version
+
+--------------------------------------------------------------------------------
 
 commandP :: Parser Command
 commandP =
