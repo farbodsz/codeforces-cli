@@ -2,10 +2,10 @@
 
 module Codeforces.App.Watcher where
 
-import Codeforces hiding (RankColor(..))
-
 import Codeforces.App.Format
 import Codeforces.App.Table
+import Codeforces.Error
+import Codeforces.Logging
 
 import Control.Concurrent
 import Control.Exception (bracket)

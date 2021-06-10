@@ -1,8 +1,8 @@
 --------------------------------------------------------------------------------
 
-module Codeforces.Rank where
+module Codeforces.Types.Rank where
 
-import Codeforces.Types
+import Codeforces.Types.Common
 
 import Data.Text (Text)
 

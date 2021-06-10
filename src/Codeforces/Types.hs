@@ -1,43 +1,25 @@
 --------------------------------------------------------------------------------
 
--- | Common types used across the application.
---
-module Codeforces.Types where
+module Codeforces.Types
+    ( module Codeforces.Types.Common
+    , module Codeforces.Types.Contest
+    , module Codeforces.Types.Party
+    , module Codeforces.Types.Problem
+    , module Codeforces.Types.Rank
+    , module Codeforces.Types.RatingChange
+    , module Codeforces.Types.Standings
+    , module Codeforces.Types.Submission
+    , module Codeforces.Types.User
+    ) where
 
-import Data.Aeson
-import Data.Text (Text)
-
---------------------------------------------------------------------------------
-
--- | ID of the contest.
---
--- Not to be confused with contest round number. The ID appears in the contest
--- URL, for example in: <https://codeforces.com/contest/566/status>.
---
-newtype ContestId = ContestId { unContestId :: Int }
-    deriving (Eq, Ord, Show)
-
-instance FromJSON ContestId where
-    parseJSON v = ContestId <$> parseJSON v
-
--- | Codeforces user handle.
-newtype Handle = Handle { unHandle :: Text }
-    deriving (Eq, Ord, Show)
-
-instance FromJSON Handle where
-    parseJSON v = Handle <$> parseJSON v
-
-instance ToJSON Handle where
-    toJSON = toJSON . unHandle
-
--- | Number of points gained for a submission or across a contest.
-type Points = Float
-
--- | A letter, or letter with digit(s) indicating the problem index in a
--- contest.
-type ProblemIndex = Text
-
--- | User or problem rating.
-type Rating = Int
+import Codeforces.Types.Common
+import Codeforces.Types.Contest
+import Codeforces.Types.Party
+import Codeforces.Types.Problem
+import Codeforces.Types.Rank
+import Codeforces.Types.RatingChange
+import Codeforces.Types.Standings
+import Codeforces.Types.Submission
+import Codeforces.Types.User
 
 --------------------------------------------------------------------------------

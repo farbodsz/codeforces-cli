@@ -1,11 +1,11 @@
 --------------------------------------------------------------------------------
 
-module Codeforces.Standings where
+module Codeforces.Types.Standings where
 
-import Codeforces.Contest (Contest)
-import Codeforces.Party (Party)
-import Codeforces.Problem (Problem)
-import Codeforces.Types
+import Codeforces.Types.Common
+import Codeforces.Types.Contest (Contest)
+import Codeforces.Types.Party (Party)
+import Codeforces.Types.Problem (Problem)
 
 import Data.Aeson
 import Data.Time

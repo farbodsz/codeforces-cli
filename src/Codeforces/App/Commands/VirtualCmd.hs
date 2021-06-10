@@ -5,9 +5,9 @@ module Codeforces.App.Commands.VirtualCmd
     ( virtualRating
     ) where
 
-import Codeforces
-
+import Codeforces.API
 import Codeforces.App.Format
+import Codeforces.Error
 
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.Except

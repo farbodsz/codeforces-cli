@@ -1,8 +1,8 @@
 --------------------------------------------------------------------------------
 
-module Codeforces.Problem where
+module Codeforces.Types.Problem where
 
-import Codeforces.Types
+import Codeforces.Types.Common
 
 import Data.Aeson
 import Data.Text (Text)

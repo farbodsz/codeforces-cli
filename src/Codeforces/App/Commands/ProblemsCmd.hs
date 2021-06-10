@@ -5,11 +5,11 @@ module Codeforces.App.Commands.ProblemsCmd
     ( problemList
     ) where
 
-import Codeforces
-
+import Codeforces.API
 import Codeforces.App.Format
 import Codeforces.App.Options
 import Codeforces.App.Table
+import Codeforces.Error
 
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.Except

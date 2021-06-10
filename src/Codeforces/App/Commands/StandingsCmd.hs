@@ -5,12 +5,12 @@ module Codeforces.App.Commands.StandingsCmd
     ( standingsList
     ) where
 
-import Codeforces hiding (RankColor(..))
-
+import Codeforces.API hiding (RankColor(..))
 import Codeforces.App.Format
 import Codeforces.App.Options
 import Codeforces.App.Table
 import Codeforces.App.Watcher
+import Codeforces.Error
 
 import Control.Monad.Trans.Except
 

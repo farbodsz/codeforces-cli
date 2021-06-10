@@ -1,8 +1,8 @@
 --------------------------------------------------------------------------------
 
-module Codeforces.Party where
+module Codeforces.Types.Party where
 
-import Codeforces.Types
+import Codeforces.Types.Common
 
 import Data.Aeson
 import Data.Text (Text)

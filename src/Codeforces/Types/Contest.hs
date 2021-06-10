@@ -1,8 +1,8 @@
 --------------------------------------------------------------------------------
 
-module Codeforces.Contest where
+module Codeforces.Types.Contest where
 
-import Codeforces.Types
+import Codeforces.Types.Common
 
 import Data.Aeson
 import Data.Text (Text)
