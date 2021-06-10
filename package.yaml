@@ -22,14 +22,18 @@ description:
 dependencies:
   - base >= 4.7 && < 5
   - aeson
+  - ansi-terminal
   - base16-bytestring
   - bytestring
   - containers
   - cryptohash-sha512
   - directory
+  - extra
   - http-client
   - http-conduit
   - http-types
+  - open-browser
+  - optparse-applicative
   - random
   - text
   - time
@@ -58,7 +62,3 @@ executables:
       - -Wall
     dependencies:
       - codeforces-cli
-      - ansi-terminal
-      - extra
-      - open-browser
-      - optparse-applicative

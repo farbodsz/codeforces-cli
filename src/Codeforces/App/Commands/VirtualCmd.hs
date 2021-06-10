@@ -1,19 +1,19 @@
 --------------------------------------------------------------------------------
 
 -- | Virtual contest/rating command.
-module Commands.VirtualCmd
+module Codeforces.App.Commands.VirtualCmd
     ( virtualRating
     ) where
 
 import Codeforces
+
+import Codeforces.App.Format
 
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.Except
 
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
-
-import Format
 
 --------------------------------------------------------------------------------
 

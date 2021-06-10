@@ -1,13 +1,18 @@
 --------------------------------------------------------------------------------
 
 -- | Contest-related commands.
-module Commands.ContestCmds
+module Codeforces.App.Commands.ContestCmds
     ( contestList
     , contestInfo
     , openContest
     ) where
 
 import Codeforces
+
+import Codeforces.App.Format
+import Codeforces.App.Options
+import Codeforces.App.Table
+import Codeforces.App.Watcher
 
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.Except
@@ -18,11 +23,6 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import Data.Time
-
-import Format
-import Options
-import Table
-import Watcher
 
 import Web.Browser
 

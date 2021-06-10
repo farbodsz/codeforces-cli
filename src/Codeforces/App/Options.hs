@@ -1,6 +1,6 @@
 --------------------------------------------------------------------------------
 
-module Options
+module Codeforces.App.Options
     ( Command(..)
     , ContestOpts(..)
     , InfoOpts(..)

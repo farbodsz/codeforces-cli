@@ -2,9 +2,7 @@
 
 module Main where
 
-import Commands
-import Config
-import Options
+import Codeforces.App
 
 --------------------------------------------------------------------------------
 

@@ -1,11 +1,16 @@
 --------------------------------------------------------------------------------
 
 -- | Standings command.
-module Commands.StandingsCmd
+module Codeforces.App.Commands.StandingsCmd
     ( standingsList
     ) where
 
 import Codeforces hiding (RankColor(..))
+
+import Codeforces.App.Format
+import Codeforces.App.Options
+import Codeforces.App.Table
+import Codeforces.App.Watcher
 
 import Control.Monad.Trans.Except
 
@@ -13,13 +18,7 @@ import qualified Data.Map as M
 import Data.Text (Text)
 import qualified Data.Text as T
 
-import Format
-import Options
-
 import System.Console.ANSI.Types
-
-import Table
-import Watcher
 
 --------------------------------------------------------------------------------
 
