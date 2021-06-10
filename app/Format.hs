@@ -6,8 +6,10 @@ module Format where
 import Codeforces hiding (RankColor(..))
 import qualified Codeforces.Rank as R
 
+import Data.Fixed
 import Data.Text (Text)
 import qualified Data.Text as T
+import Data.Time
 
 import System.Console.ANSI
 
@@ -57,6 +59,23 @@ fmtTimeConsumed x = showText x <> " ms"
 
 fmtMemoryConsumed :: Int -> Text
 fmtMemoryConsumed x = showText (x `div` 1000) <> " KB"
+
+-- | Returns an approximate and human-friendly time difference.
+--
+-- Possible options are:
+--  * "just now"
+--  * "5 seconds ago"
+--  * "X seconds ago" where X is a multiple of 10
+--  * "X minutes ago"
+--
+fmtDiffTime :: NominalDiffTime -> Text
+fmtDiffTime diff = go (nominalDiffTimeToSeconds diff)
+  where
+    go x
+        | x < 5     = "just now"
+        | x < 10    = "5 seconds ago"
+        | x < 60    = showText (x `div'` 10 :: Int) <> "0 seconds ago"
+        | otherwise = showText (x `div'` 60 :: Int) <> " minutes ago"
 
 --------------------------------------------------------------------------------
 

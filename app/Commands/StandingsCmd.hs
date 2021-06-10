@@ -7,58 +7,48 @@ module Commands.StandingsCmd
 
 import Codeforces hiding (RankColor(..))
 
-import Control.Monad.Trans.Class
 import Control.Monad.Trans.Except
 
 import qualified Data.Map as M
 import Data.Text (Text)
 import qualified Data.Text as T
-import qualified Data.Text.IO as T
 
-import Error
 import Format
 import Options
 
 import System.Console.ANSI.Types
 
 import Table
-
---------------------------------------------------------------------------------
-
-data StandingsError
-    = StandingsEmpty
-    | StandingsWithFriendsEmpty
-
-instance CodeforcesError StandingsError where
-    showE StandingsEmpty = "Standings empty."
-    showE StandingsWithFriendsEmpty =
-        "Neither you nor your friends participated in this contest."
+import Watcher
 
 --------------------------------------------------------------------------------
 
 standingsList :: ContestId -> UserConfig -> StandingOpts -> IO ()
-standingsList cId cfg StandingOpts {..} = handleE $ runExceptT $ do
-    friends <- ExceptT $ getFriends cfg
+standingsList cId cfg StandingOpts {..} =
+    handleWatch optStandWatch $ runExceptT $ do
+        friends <- handleAPI $ getFriends cfg
 
-    let mHs = if optFriends then Just (cfgHandle cfg : friends) else Nothing
+        let
+            mHs =
+                if optFriends then Just (cfgHandle cfg : friends) else Nothing
 
-    (standings, rcs) <- ExceptT $ getContestStandings' StandingsParams
-        { paramContestId  = cId
-        , paramFrom       = Just optFromIndex
-        , paramRowCount   = Just optRowCount
-        , paramRoom       = optRoom
-        , paramUnofficial = optShowUnofficial
-        , paramHandles    = mHs
-        }
+        (standings, rcs) <- handleAPI $ getContestStandings' StandingsParams
+            { paramContestId  = cId
+            , paramFrom       = Just optFromIndex
+            , paramRowCount   = Just optRowCount
+            , paramRoom       = optRoom
+            , paramUnofficial = optShowUnofficial
+            , paramHandles    = mHs
+            }
 
-    lift $ handleE $ runExceptT $ if null (standingsRanklist standings)
-        then
-            throwE
-                (if optFriends
-                    then StandingsWithFriendsEmpty
-                    else StandingsEmpty
-                )
-        else lift $ mapM_ T.putStrLn $ standingsTable standings rcs
+        if null (standingsRanklist standings)
+            then
+                throwE
+                    (if optFriends
+                        then StandingsWithFriendsEmpty
+                        else StandingsEmpty
+                    )
+            else pure $ standingsTable standings rcs
 
 standingsTable :: Standings -> M.Map Handle RatingChange -> Table
 standingsTable s rcs = makeTable headers rows

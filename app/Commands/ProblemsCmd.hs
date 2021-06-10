@@ -13,7 +13,6 @@ import Control.Monad.Trans.Except
 import Data.Text (Text)
 import qualified Data.Text.IO as T
 
-import Error
 import Format
 import Options
 import Table
@@ -24,7 +23,7 @@ problemList :: ProblemOpts -> IO ()
 problemList ProblemOpts {..} = handleE $ runExceptT $ do
     let ratingBounds = inRatingRange (optMinRating, optMaxRating)
 
-    problems <- ExceptT $ fmap (filter ratingBounds) <$> getProblems []
+    problems <- handleAPI $ fmap (filter ratingBounds) <$> getProblems []
 
     let headers = [("#", 6), ("Name", 40), ("Rating", 6)]
         rows    = map

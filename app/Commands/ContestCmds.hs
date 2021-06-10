@@ -19,10 +19,10 @@ import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import Data.Time
 
-import Error
 import Format
 import Options
 import Table
+import Watcher
 
 import Web.Browser
 
@@ -30,7 +30,7 @@ import Web.Browser
 
 contestList :: ContestOpts -> IO ()
 contestList ContestOpts {..} = handleE $ runExceptT $ do
-    contests <- ExceptT $ getContests optIsGym
+    contests <- handleAPI $ getContests optIsGym
     now      <- lift getCurrentTime
 
     let headers = [("#", 4), ("Name", 50), ("Date", 16), ("Duration", 10)]
@@ -69,62 +69,51 @@ fmtDuration = T.pack . formatTime defaultTimeLocale "%h:%0M hrs"
 --------------------------------------------------------------------------------
 
 contestInfo :: ContestId -> UserConfig -> InfoOpts -> IO ()
-contestInfo cId cfg opts = handleE $ runExceptT $ do
+contestInfo cId cfg opts =
+    handleWatch (optInfoWatch opts) (contestInfoTable cId cfg opts)
+
+-- | 'contestInfoTable' @problems submissions statistics@ fetches data about the
+-- contest and constructs a table of its problems.
+--
+-- The table includes problem statistics, and if the user has made a submission,
+-- their submission verdict for the problem.
+--
+contestInfoTable
+    :: ContestId -> UserConfig -> InfoOpts -> IO (Either CodeforcesError Table)
+contestInfoTable cId cfg opts = runExceptT $ do
     let handle = fromMaybe (cfgHandle cfg) (optHandle opts)
 
-    problems    <- ExceptT $ getContestProblems cId
-    stats       <- ExceptT $ fmap problemStatsMap <$> getProblemStats []
-    submissions <-
-        ExceptT $ fmap submissionsMap <$> getContestSubmissions cId handle
+    ps      <- handleAPI $ getContestProblems cId
+    statMap <- handleAPI $ fmap problemStatsMap <$> getProblemStats []
+    subMap  <-
+        handleAPI $ fmap submissionsMap <$> getContestSubmissions cId handle
 
-    lift $ printContestInfoTable problems submissions stats
+    let headers =
+            [ ("#"      , 2)
+            , ("Problem", 30)
+            , ("Verdict", 35)
+            , ("Time"   , 7)
+            , ("Memory" , 8)
+            , ("Solved" , 7)
+            ]
+        rows = map
+            (\Problem {..} ->
+                let
+                    mSub   = M.lookup problemIndex subMap
+                    mStats = M.lookup problemIndex statMap
+                in
+                    [ plainCell problemIndex
+                    , plainCell problemName
+                    , contestSubmissionCell mSub
+                    , plainCell $ maybeTimeTaken mSub
+                    , plainCell $ maybeMemTaken mSub
+                    , plainCell $ maybeSolved mStats
+                    ]
+            )
+            ps
 
--- | 'problemStatsMap' @stats@ computes a map of each problem's index to the
--- corresponding 'ProblemStats' for it.
-problemStatsMap :: [ProblemStats] -> M.Map ProblemIndex ProblemStats
-problemStatsMap = M.fromList . map (pStatProblemIndex >>= (,))
-
--- | 'submissionsMap' @submissions@ computes a map of each problem's index to
--- the most recent submission for it.
-submissionsMap :: [Submission] -> M.Map ProblemIndex Submission
-submissionsMap =
-    M.fromListWith (const id) . map (problemIndex . submissionProblem >>= (,))
-
--- | 'printContestInfoTable' @problems submissions statistics@ prints a table
--- of problems in this contest, each of which with the problem statistics, and
--- if the user has made a submission, their submission verdict for the problem.
-printContestInfoTable
-    :: [Problem]
-    -> M.Map ProblemIndex Submission
-    -> M.Map ProblemIndex ProblemStats
-    -> IO ()
-printContestInfoTable ps subMap statMap = mapM_ T.putStrLn
-    $ makeTable headers rows
+    pure $ makeTable headers rows
   where
-    headers =
-        [ ("#"      , 2)
-        , ("Problem", 30)
-        , ("Verdict", 35)
-        , ("Time"   , 7)
-        , ("Memory" , 8)
-        , ("Solved" , 7)
-        ]
-    rows = map
-        (\Problem {..} ->
-            let
-                mSub   = M.lookup problemIndex subMap
-                mStats = M.lookup problemIndex statMap
-            in
-                [ plainCell problemIndex
-                , plainCell problemName
-                , contestSubmissionCell mSub
-                , plainCell $ maybeTimeTaken mSub
-                , plainCell $ maybeMemTaken mSub
-                , plainCell $ maybeSolved mStats
-                ]
-        )
-        ps
-
     maybeTimeTaken = maybe "-" (fmtTimeConsumed . submissionTimeConsumed)
     maybeMemTaken  = maybe "-" (fmtMemoryConsumed . submissionMemoryConsumed)
     maybeSolved    = maybe "" (("x" <>) . showText . pStatSolvedCount)
@@ -137,6 +126,17 @@ contestSubmissionCell (Just Submission {..}) = verdictCell
     submissionPassedTestCount
     submissionPoints
     submissionVerdict
+
+-- | 'problemStatsMap' @stats@ computes a map of each problem's index to the
+-- corresponding 'ProblemStats' for it.
+problemStatsMap :: [ProblemStats] -> M.Map ProblemIndex ProblemStats
+problemStatsMap = M.fromList . map (pStatProblemIndex >>= (,))
+
+-- | 'submissionsMap' @submissions@ computes a map of each problem's index to
+-- the most recent submission for it.
+submissionsMap :: [Submission] -> M.Map ProblemIndex Submission
+submissionsMap =
+    M.fromListWith (const id) . map (problemIndex . submissionProblem >>= (,))
 
 --------------------------------------------------------------------------------
 

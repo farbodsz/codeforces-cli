@@ -37,7 +37,8 @@ data ContestOpts = ContestOpts
     deriving Eq
 
 data InfoOpts = InfoOpts
-    { optHandle :: Maybe Handle
+    { optHandle    :: Maybe Handle
+    , optInfoWatch :: Bool
     }
     deriving Eq
 
@@ -53,12 +54,14 @@ data StandingOpts = StandingOpts
     , optRowCount       :: Int
     , optRoom           :: Maybe Int
     , optFriends        :: Bool
+    , optStandWatch     :: Bool
     }
     deriving Eq
 
 data StatusOpts = StatusOpts
     { optStatusFrom  :: Int
     , optStatusCount :: Int
+    , optStatusWatch :: Bool
     }
     deriving Eq
 
@@ -139,19 +142,20 @@ contestInfoP :: Parser Command
 contestInfoP = InfoCmd <$> contestIdArg <*> contestInfoOpts
 
 contestInfoOpts :: Parser InfoOpts
-contestInfoOpts = InfoOpts <$> optional
-    (   Handle
-    <$> (strOption
-            (  long "user"
-            <> short 'u'
-            <> help
-                   "Codeforces user handle. If specified, it shows the contest\
-                   \ details of another user. If not specified, your contest\
-                   \ details will be shown."
-            <> metavar "HANDLE"
-            )
-        )
-    )
+contestInfoOpts =
+    InfoOpts
+        <$> optional
+                (Handle <$> strOption
+                    (  long "user"
+                    <> short 'u'
+                    <> help
+                           "Codeforces user handle. If specified, it shows the\
+                           \ contest details of another user. If not specified,\
+                           \ your contest details will be shown."
+                    <> metavar "HANDLE"
+                    )
+                )
+        <*> watchOpt
 
 friendsP :: Parser Command
 friendsP = pure FriendsCmd
@@ -222,12 +226,13 @@ standingOpts =
                        "If true then only you and your friends will be shown\
                            \ in the standings."
                 )
+        <*> watchOpt
 
 statusP :: Parser Command
 statusP = StatusCmd <$> handleArg <*> statusOpts
 
 statusOpts :: Parser StatusOpts
-statusOpts = StatusOpts <$> fromOpt <*> countOpt
+statusOpts = StatusOpts <$> fromOpt <*> countOpt <*> watchOpt
 
 userP :: Parser Command
 userP = UserCmd <$> handleArg
@@ -271,5 +276,9 @@ countOpt = option
     <> value 40
     <> metavar "INT"
     )
+
+watchOpt :: Parser Bool
+watchOpt = switch $ long "watch" <> short 'w' <> help
+    "Watch this command and update output whenever it changes."
 
 --------------------------------------------------------------------------------

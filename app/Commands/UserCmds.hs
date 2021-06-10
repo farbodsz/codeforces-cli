@@ -19,16 +19,16 @@ import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import Data.Time
 
-import Error
 import Format
 import Options
 import Table
+import Watcher
 
 --------------------------------------------------------------------------------
 
 userInfo :: Handle -> IO ()
 userInfo h = handleE $ runExceptT $ do
-    u <- ExceptT $ getUser h
+    u <- handleAPI $ getUser h
 
     let rank = getRank (userRating u)
 
@@ -72,7 +72,7 @@ printPlace User {..} = do
 
 userRatings :: Handle -> IO ()
 userRatings h = handleE $ runExceptT $ do
-    rcs <- ExceptT $ getUserRatingHistory h
+    rcs <- handleAPI $ getUserRatingHistory h
 
     let headers =
             [ ("#"      , 3)
@@ -98,8 +98,11 @@ userRatings h = handleE $ runExceptT $ do
 --------------------------------------------------------------------------------
 
 userStatus :: Handle -> StatusOpts -> IO ()
-userStatus h StatusOpts {..} = handleE $ runExceptT $ do
-    ss <- ExceptT $ getUserStatus h optStatusFrom optStatusCount
+userStatus h opts = handleWatch (optStatusWatch opts) (userStatusTable h opts)
+
+userStatusTable :: Handle -> StatusOpts -> IO (Either CodeforcesError Table)
+userStatusTable h StatusOpts {..} = runExceptT $ do
+    ss <- handleAPI $ getUserStatus h optStatusFrom optStatusCount
 
     let headers =
             [ ("When"   , 12)
@@ -125,7 +128,7 @@ userStatus h StatusOpts {..} = handleE $ runExceptT $ do
             )
             ss
 
-    lift $ mapM_ T.putStrLn $ makeTable headers rows
+    pure $ makeTable headers rows
 
 fmtTime :: UTCTime -> Text
 fmtTime = T.pack . formatTime defaultTimeLocale "%b/%d %H:%M"
@@ -137,7 +140,7 @@ fmtProblem p = T.concat [problemIndex p, " - ", problemName p]
 
 userFriends :: UserConfig -> IO ()
 userFriends cfg = handleE $ runExceptT $ do
-    fs <- ExceptT $ getFriends cfg
+    fs <- handleAPI $ getFriends cfg
     lift $ mapM_ (T.putStrLn . unHandle) fs
 
 --------------------------------------------------------------------------------
