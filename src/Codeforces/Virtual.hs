@@ -8,9 +8,9 @@ module Codeforces.Virtual
     , calculateResult
     ) where
 
-import Codeforces.RatingChange
-import Codeforces.Standings
-import Codeforces.Types
+import Codeforces.Types.Common
+import Codeforces.Types.RatingChange
+import Codeforces.Types.Standings
 import Codeforces.Virtual.RatingCalculator
 import Codeforces.Virtual.Types
 

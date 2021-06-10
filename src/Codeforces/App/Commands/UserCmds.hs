@@ -8,12 +8,12 @@ module Codeforces.App.Commands.UserCmds
     , userFriends
     ) where
 
-import Codeforces
-
+import Codeforces.API
 import Codeforces.App.Format
 import Codeforces.App.Options
 import Codeforces.App.Table
 import Codeforces.App.Watcher
+import Codeforces.Error
 
 import Control.Monad.Extra
 import Control.Monad.Trans.Class

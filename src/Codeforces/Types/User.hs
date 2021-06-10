@@ -1,8 +1,8 @@
 --------------------------------------------------------------------------------
 
-module Codeforces.User where
+module Codeforces.Types.User where
 
-import Codeforces.Types
+import Codeforces.Types.Common
 
 import Data.Aeson
 import Data.Maybe

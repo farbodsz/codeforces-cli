@@ -3,8 +3,8 @@
 -- | Utility functions for formatting data.
 module Codeforces.App.Format where
 
-import Codeforces hiding (RankColor(..))
-import qualified Codeforces.Rank as R
+import Codeforces.Types hiding (RankColor(..))
+import qualified Codeforces.Types.Rank as R
 
 import Codeforces.App.Table
 

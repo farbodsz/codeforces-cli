@@ -1,17 +1,7 @@
 --------------------------------------------------------------------------------
 
-module Codeforces
-    ( module Codeforces.Contest
-    , module Codeforces.Error
-    , module Codeforces.Logging
-    , module Codeforces.Party
-    , module Codeforces.Problem
-    , module Codeforces.Rank
-    , module Codeforces.RatingChange
-    , module Codeforces.Standings
-    , module Codeforces.Submission
-    , module Codeforces.Types
-    , module Codeforces.User
+module Codeforces.API
+    ( module Codeforces.Types
     , ResponseError(..)
     , handleAPI
 
@@ -50,19 +40,10 @@ module Codeforces
     , UserConfig(..)
     ) where
 
-import Codeforces.Response
 import Codeforces.Config
-import Codeforces.Contest
 import Codeforces.Error
-import Codeforces.Logging
-import Codeforces.Party
-import Codeforces.Problem
-import Codeforces.Rank
-import Codeforces.RatingChange
-import Codeforces.Standings
-import Codeforces.Submission
+import Codeforces.Response
 import Codeforces.Types
-import Codeforces.User
 import Codeforces.Virtual
 
 import Control.Arrow (left)

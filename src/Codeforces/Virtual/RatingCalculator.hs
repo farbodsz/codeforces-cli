@@ -7,9 +7,9 @@ module Codeforces.Virtual.RatingCalculator
     ( calculateContestResults
     ) where
 
-import Codeforces.Party hiding (Contestant)
-import Codeforces.Standings
-import Codeforces.Types
+import Codeforces.Types.Common
+import Codeforces.Types.Party hiding (Contestant)
+import Codeforces.Types.Standings
 import Codeforces.Virtual.Types
 
 import Control.Monad

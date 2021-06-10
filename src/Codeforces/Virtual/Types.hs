@@ -2,8 +2,8 @@
 
 module Codeforces.Virtual.Types where
 
-import Codeforces.Party
-import Codeforces.Types
+import Codeforces.Types.Common
+import Codeforces.Types.Party
 
 import Data.List
 import qualified Data.Map as M
