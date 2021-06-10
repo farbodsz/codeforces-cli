@@ -55,26 +55,27 @@ watchTable
     -> IO (Either CodeforcesError Table)    -- ^ Fetches an updated table.
     -> StateT WatchState IO ()              -- ^ Data from previous iteration.
 watchTable delaySecs m = do
-    oldState    <- get
-    now         <- lift getCurrentTime
+    oldState <- get
+    now      <- lift getCurrentTime
 
-    tableOutput <- lift m >>= \case
+    output   <- lift m >>= \case
         Left e -> do
             -- Include error message but table data remains the same
             let oldTable   = wsTable oldState
                 lastUpdate = wsUpdateTime oldState
-
             pure $ addInfo oldTable (Just e) now lastUpdate
 
         Right newTable -> do
             let currUpdate = Just now
             put $ WatchState newTable currUpdate
-
             pure $ addInfo newTable Nothing now currUpdate
 
     lift $ do
+        currTermH <- fmap fst <$> getTerminalSize
+        let output' = truncateTable output (subtract 1 <$> currTermH)
+
         setCursorPosition 0 0
-        forM_ tableOutput $ \r -> clearLine >> T.putStrLn r
+        forM_ output' $ \r -> clearLine >> T.putStrLn r
 
         threadDelay (delaySecs * 1000000)
 
@@ -108,6 +109,11 @@ addInfo table me now lastUpdate =
     errorMsg  = colored Red . (<> " ") . T.pack . showE <$> me
     updateMsg = T.concat <$> sequenceA
         [Just "Last update: ", fmtDiffTime <$> (diffUTCTime now <$> lastUpdate)]
+
+-- | 'truncateTable' @table x@ returns the table with the first @x@ rows, or the
+-- original table if @x@ is @Nothing@.
+truncateTable :: Table -> Maybe Int -> Table
+truncateTable = maybe <*> flip take
 
 --------------------------------------------------------------------------------
 
