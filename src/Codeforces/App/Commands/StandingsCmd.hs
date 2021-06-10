@@ -5,20 +5,20 @@ module Codeforces.App.Commands.StandingsCmd
     ( standingsList
     ) where
 
-import Codeforces.API hiding (RankColor(..))
-import Codeforces.App.Format
-import Codeforces.App.Options
-import Codeforces.App.Table
-import Codeforces.App.Watcher
-import Codeforces.Error
+import           Codeforces.API          hiding ( RankColor(..) )
+import           Codeforces.App.Format
+import           Codeforces.App.Options
+import           Codeforces.App.Table
+import           Codeforces.App.Watcher
+import           Codeforces.Error
 
-import Control.Monad.Trans.Except
+import           Control.Monad.Trans.Except
 
-import qualified Data.Map as M
-import Data.Text (Text)
-import qualified Data.Text as T
+import qualified Data.Map                      as M
+import           Data.Text                      ( Text )
+import qualified Data.Text                     as T
 
-import System.Console.ANSI.Types
+import           System.Console.ANSI.Types
 
 --------------------------------------------------------------------------------
 
@@ -27,9 +27,9 @@ standingsList cId cfg StandingOpts {..} =
     handleWatch optStandWatch $ runExceptT $ do
         friends <- handleAPI $ getFriends cfg
 
-        let
-            mHs =
-                if optFriends then Just (cfgHandle cfg : friends) else Nothing
+        let mHs = if optFriends
+                then Just (cfgHandle cfg : friends)
+                else Nothing
 
         (standings, rcs) <- handleAPI $ getContestStandings' StandingsParams
             { paramContestId  = cId

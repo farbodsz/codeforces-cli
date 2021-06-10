@@ -2,10 +2,10 @@
 
 module Codeforces.Types.Problem where
 
-import Codeforces.Types.Common
+import           Codeforces.Types.Common
 
-import Data.Aeson
-import Data.Text (Text)
+import           Data.Aeson
+import           Data.Text                      ( Text )
 
 --------------------------------------------------------------------------------
 
@@ -65,7 +65,7 @@ instance FromJSON ProblemStats where
 
 --------------------------------------------------------------------------------
 
--- | Problem data returned by the API contains two lists: a list of problems 
+-- | Problem data returned by the API contains two lists: a list of problems
 -- followed by a list of corresponding problem statistics.
 data ProblemsResponse = ProblemsResponse
     { prProblems :: [Problem]

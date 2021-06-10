@@ -5,16 +5,16 @@ module Codeforces.App.Config
     , setupConfig
     ) where
 
-import Codeforces.Config
-import Codeforces.Types
+import           Codeforces.Config
+import           Codeforces.Types
 
-import Data.Aeson
-import qualified Data.ByteString.Lazy as BL
-import Data.Maybe
-import qualified Data.Text.IO as T
+import           Data.Aeson
+import qualified Data.ByteString.Lazy          as BL
+import           Data.Maybe
+import qualified Data.Text.IO                  as T
 
-import System.Directory
-import System.IO
+import           System.Directory
+import           System.IO
 
 --------------------------------------------------------------------------------
 
@@ -79,11 +79,10 @@ createConfig path = do
     putStr "API secret: "
     secret <- T.getLine
 
-    BL.writeFile path $ encode UserConfig
-        { cfgHandle = Handle handle
-        , cfgKey    = key
-        , cfgSecret = secret
-        }
+    BL.writeFile path $ encode UserConfig { cfgHandle = Handle handle
+                                          , cfgKey    = key
+                                          , cfgSecret = secret
+                                          }
     putStrLn ""
     putStrLn $ "Successfully created a configuration file in " ++ path
 

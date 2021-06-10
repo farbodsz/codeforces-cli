@@ -2,15 +2,15 @@
 
 module Codeforces.Types.Submission where
 
-import Codeforces.Types.Common
-import Codeforces.Types.Party (Party)
-import Codeforces.Types.Problem (Problem)
+import           Codeforces.Types.Common
+import           Codeforces.Types.Party         ( Party )
+import           Codeforces.Types.Problem       ( Problem )
 
-import Data.Aeson
-import Data.Text (Text)
-import qualified Data.Text as T
-import Data.Time
-import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
+import           Data.Aeson
+import           Data.Text                      ( Text )
+import qualified Data.Text                     as T
+import           Data.Time
+import           Data.Time.Clock.POSIX          ( posixSecondsToUTCTime )
 
 --------------------------------------------------------------------------------
 
@@ -97,9 +97,9 @@ instance FromJSON Testset where
 data Submission = Submission
     { submissionId                  :: Int
     , submissionContestId           :: Maybe ContestId
-      -- | Time when the solution was submitted. 
+      -- | Time when the solution was submitted.
     , submissionTime                :: UTCTime
-      -- | The time passed after the start of the contest (or a virtual start 
+      -- | The time passed after the start of the contest (or a virtual start
       -- for virtual parties), before the submission.
     , submissionRelativeTime        :: DiffTime
     , submissionProblem             :: Problem

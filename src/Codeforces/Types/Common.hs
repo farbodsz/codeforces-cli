@@ -4,8 +4,8 @@
 --
 module Codeforces.Types.Common where
 
-import Data.Aeson
-import Data.Text (Text)
+import           Data.Aeson
+import           Data.Text                      ( Text )
 
 --------------------------------------------------------------------------------
 

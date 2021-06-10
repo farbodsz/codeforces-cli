@@ -2,11 +2,11 @@
 
 module Codeforces.Types.User where
 
-import Codeforces.Types.Common
+import           Codeforces.Types.Common
 
-import Data.Aeson
-import Data.Maybe
-import Data.Text (Text)
+import           Data.Aeson
+import           Data.Maybe
+import           Data.Text                      ( Text )
 
 --------------------------------------------------------------------------------
 

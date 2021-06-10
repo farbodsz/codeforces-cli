@@ -6,22 +6,22 @@ module Codeforces.Config
     , generateRequestParams
     ) where
 
-import Codeforces.Types
+import           Codeforces.Types
 
-import qualified Crypto.Hash.SHA512 as SHA512
+import qualified Crypto.Hash.SHA512            as SHA512
 
-import Data.Aeson
-import qualified Data.ByteString.Base16 as Base16
-import Data.ByteString.Char8 (ByteString)
-import qualified Data.ByteString.Char8 as BC
-import Data.Text (Text)
-import qualified Data.Text.Encoding as T
-import Data.Time.Clock.POSIX
+import           Data.Aeson
+import qualified Data.ByteString.Base16        as Base16
+import           Data.ByteString.Char8          ( ByteString )
+import qualified Data.ByteString.Char8         as BC
+import           Data.Text                      ( Text )
+import qualified Data.Text.Encoding            as T
+import           Data.Time.Clock.POSIX
 
-import Network.HTTP.Simple
-import Network.HTTP.Types (renderQuery)
+import           Network.HTTP.Simple
+import           Network.HTTP.Types             ( renderQuery )
 
-import System.Random
+import           System.Random
 
 --------------------------------------------------------------------------------
 
@@ -84,15 +84,13 @@ generateRequestParams UserConfig {..} path query = do
     (rand :: Int) <- randomRIO (100000, 999999)
     time          <- getPOSIXTime
 
-    let
-        authQuery = AuthQuery
-            { aqOriginalQuery = query
-            , aqMethodName    = path
-            , aqKey           = cfgKey
-            , aqSecret        = cfgSecret
-            , aqTime          = time
-            , aqRand          = rand
-            }
+    let authQuery = AuthQuery { aqOriginalQuery = query
+                              , aqMethodName    = path
+                              , aqKey           = cfgKey
+                              , aqSecret        = cfgSecret
+                              , aqTime          = time
+                              , aqRand          = rand
+                              }
     let apiSig = (BC.pack . show) rand <> generateHash authQuery
 
     pure $ concat

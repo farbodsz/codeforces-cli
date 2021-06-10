@@ -6,8 +6,8 @@ module Codeforces.App
     , module Codeforces.App.Options
     ) where
 
-import Codeforces.App.Commands
-import Codeforces.App.Config
-import Codeforces.App.Options
+import           Codeforces.App.Commands
+import           Codeforces.App.Config
+import           Codeforces.App.Options
 
 --------------------------------------------------------------------------------

@@ -2,13 +2,13 @@
 
 module Codeforces.Types.Standings where
 
-import Codeforces.Types.Common
-import Codeforces.Types.Contest (Contest)
-import Codeforces.Types.Party (Party)
-import Codeforces.Types.Problem (Problem)
+import           Codeforces.Types.Common
+import           Codeforces.Types.Contest       ( Contest )
+import           Codeforces.Types.Party         ( Party )
+import           Codeforces.Types.Problem       ( Problem )
 
-import Data.Aeson
-import Data.Time
+import           Data.Aeson
+import           Data.Time
 
 --------------------------------------------------------------------------------
 
@@ -34,7 +34,7 @@ data ProblemResult = ProblemResult
     , prRejectedAttemptCount :: Int
     , prType                 :: ResultType
     -- | Number of seconds after the start of the contest before the submission,
-    -- that brought maximal amount of points for this problem. 
+    -- that brought maximal amount of points for this problem.
     , prBestSubmissionTime   :: Maybe Int
     }
     deriving Show

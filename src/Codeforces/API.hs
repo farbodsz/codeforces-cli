@@ -40,19 +40,19 @@ module Codeforces.API
     , UserConfig(..)
     ) where
 
-import Codeforces.Config
-import Codeforces.Error
-import Codeforces.Response
-import Codeforces.Types
-import Codeforces.Virtual
+import           Codeforces.Config
+import           Codeforces.Error
+import           Codeforces.Response
+import           Codeforces.Types
+import           Codeforces.Virtual
 
-import Control.Arrow (left)
-import Control.Monad.Trans.Except
+import           Control.Arrow                  ( left )
+import           Control.Monad.Trans.Except
 
-import qualified Data.ByteString.Char8 as BC
-import qualified Data.Map as M
-import qualified Data.Text as T
-import qualified Data.Text.Encoding as T
+import qualified Data.ByteString.Char8         as BC
+import qualified Data.Map                      as M
+import qualified Data.Text                     as T
+import qualified Data.Text.Encoding            as T
 
 --------------------------------------------------------------------------------
 
@@ -149,14 +149,13 @@ getProblemStats ts = fmap prStats <$> getAllProblemData ts
 --
 getContestProblems :: ContestId -> IO (Either ResponseError [Problem])
 getContestProblems cId = fmap standingsProblems <$> getContestStandings
-    StandingsParams
-        { paramContestId  = cId
-        , paramFrom       = Just 1
-        , paramRowCount   = Just 1
-        , paramRoom       = Nothing
-        , paramUnofficial = False
-        , paramHandles    = Nothing
-        }
+    StandingsParams { paramContestId  = cId
+                    , paramFrom       = Just 1
+                    , paramRowCount   = Just 1
+                    , paramRoom       = Nothing
+                    , paramUnofficial = False
+                    , paramHandles    = Nothing
+                    }
 
 --------------------------------------------------------------------------------
 
@@ -220,11 +219,10 @@ calculateVirtualResult cId handle points penalty = runExceptT $ do
         }
 
     user <- ExceptT $ getUser handle
-    let vUser = VirtualUser
-            { vuPoints  = points
-            , vuPenalty = penalty
-            , vuRating  = userRating user
-            }
+    let vUser = VirtualUser { vuPoints  = points
+                            , vuPenalty = penalty
+                            , vuRating  = userRating user
+                            }
         result = calculateResult vUser rcs (standingsRanklist standings)
 
     pure (user, result)
@@ -238,9 +236,8 @@ argText :: T.Text -> Maybe BC.ByteString
 argText = Just . T.encodeUtf8
 
 argTexts :: [T.Text] -> Maybe BC.ByteString
-argTexts xs
-    | null xs   = Nothing
-    | otherwise = (Just . T.encodeUtf8 . T.intercalate ";") xs
+argTexts xs | null xs   = Nothing
+            | otherwise = (Just . T.encodeUtf8 . T.intercalate ";") xs
 
 argInt :: Int -> Maybe BC.ByteString
 argInt = Just . BC.pack . show

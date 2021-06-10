@@ -8,21 +8,21 @@ module Codeforces.App.Commands.UserCmds
     , userFriends
     ) where
 
-import Codeforces.API
-import Codeforces.App.Format
-import Codeforces.App.Options
-import Codeforces.App.Table
-import Codeforces.App.Watcher
-import Codeforces.Error
+import           Codeforces.API
+import           Codeforces.App.Format
+import           Codeforces.App.Options
+import           Codeforces.App.Table
+import           Codeforces.App.Watcher
+import           Codeforces.Error
 
-import Control.Monad.Extra
-import Control.Monad.Trans.Class
-import Control.Monad.Trans.Except
+import           Control.Monad.Extra
+import           Control.Monad.Trans.Class
+import           Control.Monad.Trans.Except
 
-import Data.Text (Text)
-import qualified Data.Text as T
-import qualified Data.Text.IO as T
-import Data.Time
+import           Data.Text                      ( Text )
+import qualified Data.Text                     as T
+import qualified Data.Text.IO                  as T
+import           Data.Time
 
 --------------------------------------------------------------------------------
 
@@ -117,11 +117,10 @@ userStatusTable h StatusOpts {..} = runExceptT $ do
                 [ plainCell $ fmtTime submissionTime
                 , plainCell $ fmtProblem submissionProblem
                 , plainCell submissionProgrammingLanguage
-                , verdictCell
-                    submissionTestset
-                    submissionPassedTestCount
-                    submissionPoints
-                    submissionVerdict
+                , verdictCell submissionTestset
+                              submissionPassedTestCount
+                              submissionPoints
+                              submissionVerdict
                 , plainCell $ fmtTimeConsumed submissionTimeConsumed
                 , plainCell $ fmtMemoryConsumed submissionMemoryConsumed
                 ]

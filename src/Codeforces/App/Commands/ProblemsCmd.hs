@@ -5,17 +5,17 @@ module Codeforces.App.Commands.ProblemsCmd
     ( problemList
     ) where
 
-import Codeforces.API
-import Codeforces.App.Format
-import Codeforces.App.Options
-import Codeforces.App.Table
-import Codeforces.Error
+import           Codeforces.API
+import           Codeforces.App.Format
+import           Codeforces.App.Options
+import           Codeforces.App.Table
+import           Codeforces.Error
 
-import Control.Monad.Trans.Class
-import Control.Monad.Trans.Except
+import           Control.Monad.Trans.Class
+import           Control.Monad.Trans.Except
 
-import Data.Text (Text)
-import qualified Data.Text.IO as T
+import           Data.Text                      ( Text )
+import qualified Data.Text.IO                  as T
 
 --------------------------------------------------------------------------------
 

@@ -7,10 +7,10 @@ module Codeforces.App.Table
     , makeTable
     ) where
 
-import Data.Text (Text)
-import qualified Data.Text as T
+import           Data.Text                      ( Text )
+import qualified Data.Text                     as T
 
-import System.Console.ANSI
+import           System.Console.ANSI
 
 --------------------------------------------------------------------------------
 
@@ -51,9 +51,8 @@ colSep :: Text
 colSep = "  "
 
 pad :: Int -> Text -> Text
-pad w s
-    | len > w   = T.take (w - 2) s <> ".."
-    | otherwise = s <> T.replicate (w - len) " "
+pad w s | len > w   = T.take (w - 2) s <> ".."
+        | otherwise = s <> T.replicate (w - len) " "
     where len = T.length s
 
 --------------------------------------------------------------------------------

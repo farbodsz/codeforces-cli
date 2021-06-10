@@ -7,24 +7,24 @@ module Codeforces.App.Commands.ContestCmds
     , openContest
     ) where
 
-import Codeforces.API
-import Codeforces.App.Format
-import Codeforces.App.Options
-import Codeforces.App.Table
-import Codeforces.App.Watcher
-import Codeforces.Error
+import           Codeforces.API
+import           Codeforces.App.Format
+import           Codeforces.App.Options
+import           Codeforces.App.Table
+import           Codeforces.App.Watcher
+import           Codeforces.Error
 
-import Control.Monad.Trans.Class
-import Control.Monad.Trans.Except
+import           Control.Monad.Trans.Class
+import           Control.Monad.Trans.Except
 
-import qualified Data.Map as M
-import Data.Maybe
-import Data.Text (Text)
-import qualified Data.Text as T
-import qualified Data.Text.IO as T
-import Data.Time
+import qualified Data.Map                      as M
+import           Data.Maybe
+import           Data.Text                      ( Text )
+import qualified Data.Text                     as T
+import qualified Data.Text.IO                  as T
+import           Data.Time
 
-import Web.Browser
+import           Web.Browser
 
 --------------------------------------------------------------------------------
 
@@ -99,11 +99,9 @@ contestInfoTable cId cfg opts = runExceptT $ do
             ]
         rows = map
             (\Problem {..} ->
-                let
-                    mSub   = M.lookup problemIndex subMap
+                let mSub   = M.lookup problemIndex subMap
                     mStats = M.lookup problemIndex statMap
-                in
-                    [ plainCell problemIndex
+                in  [ plainCell problemIndex
                     , plainCell problemName
                     , contestSubmissionCell mSub
                     , plainCell $ maybeTimeTaken mSub

@@ -12,14 +12,14 @@ module Codeforces.Types
     , module Codeforces.Types.User
     ) where
 
-import Codeforces.Types.Common
-import Codeforces.Types.Contest
-import Codeforces.Types.Party
-import Codeforces.Types.Problem
-import Codeforces.Types.Rank
-import Codeforces.Types.RatingChange
-import Codeforces.Types.Standings
-import Codeforces.Types.Submission
-import Codeforces.Types.User
+import           Codeforces.Types.Common
+import           Codeforces.Types.Contest
+import           Codeforces.Types.Party
+import           Codeforces.Types.Problem
+import           Codeforces.Types.Rank
+import           Codeforces.Types.RatingChange
+import           Codeforces.Types.Standings
+import           Codeforces.Types.Submission
+import           Codeforces.Types.User
 
 --------------------------------------------------------------------------------

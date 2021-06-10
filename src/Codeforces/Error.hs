@@ -5,8 +5,8 @@
 --
 module Codeforces.Error where
 
-import qualified Codeforces.Response as R
-import Codeforces.Logging
+import           Codeforces.Logging
+import qualified Codeforces.Response           as R
 
 --------------------------------------------------------------------------------
 

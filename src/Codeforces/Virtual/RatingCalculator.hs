@@ -1,25 +1,25 @@
 --------------------------------------------------------------------------------
 
--- | Implementation of the Open Codeforces Rating System described in 
+-- | Implementation of the Open Codeforces Rating System described in
 -- <https://codeforces.com/blog/entry/20762 Mike Mirzayanov's blog post>.
 --
 module Codeforces.Virtual.RatingCalculator
     ( calculateContestResults
     ) where
 
-import Codeforces.Types.Common
-import Codeforces.Types.Party hiding (Contestant)
-import Codeforces.Types.Standings
-import Codeforces.Virtual.Types
+import           Codeforces.Types.Common
+import           Codeforces.Types.Party  hiding ( Contestant )
+import           Codeforces.Types.Standings
+import           Codeforces.Virtual.Types
 
-import Control.Monad
-import Control.Monad.Trans.State
+import           Control.Monad
+import           Control.Monad.Trans.State
 
-import Data.Functor ((<&>))
-import Data.List
-import qualified Data.Map as M
-import Data.Maybe
-import Data.Ord
+import           Data.Functor                   ( (<&>) )
+import           Data.List
+import qualified Data.Map                      as M
+import           Data.Maybe
+import           Data.Ord
 
 --------------------------------------------------------------------------------
 
@@ -35,12 +35,11 @@ calculateContestResults hs rrs = ContestResults sortedCs deltas seeds
 -- | Constructs a list of contestants from the previous ratings and rankings.
 mkContestants :: M.Map Handle Rating -> [RanklistRow] -> [Contestant]
 mkContestants prevRatings = map
-    (\RanklistRow {..} -> Contestant
-        { contestantParty  = rrParty
-        , contestantRank   = rrRank
-        , contestantPoints = rrPoints
-        , contestantRating = getPartyRating rrParty
-        }
+    (\RanklistRow {..} -> Contestant { contestantParty  = rrParty
+                                     , contestantRank   = rrRank
+                                     , contestantPoints = rrPoints
+                                     , contestantRating = getPartyRating rrParty
+                                     }
     )
   where
     getPartyRating = computePartyRating . map lookupRating . partyMembers
@@ -66,9 +65,8 @@ computePartyRating ratings = go 20 100 4000
   where
     go :: Int -> Float -> Float -> Rating
     go 0 l r = round $ (l + r) / 2
-    go i l r
-        | computed > mid = go (i - 1) mid r
-        | otherwise      = go (i - 1) l mid
+    go i l r | computed > mid = go (i - 1) mid r
+             | otherwise      = go (i - 1) l mid
       where
         mid = (l + r) / 2
         rWinsProbability =
@@ -121,9 +119,8 @@ adjustTopDeltas cs ds = M.map (+ inc) ds
   where
     inc          = min 0 $ max (-10) (negate sumTopDeltas `div` zeroSumCount)
 
-    sumTopDeltas = sum $ mapMaybe
-        (flip M.lookup ds . contestantParty)
-        (take zeroSumCount $ sortByRatingDesc cs)
+    sumTopDeltas = sum $ mapMaybe (flip M.lookup ds . contestantParty)
+                                  (take zeroSumCount $ sortByRatingDesc cs)
 
     zeroSumCount = min (M.size ds) topCount
     topCount     = 4 * (round' . sqrt . fromIntegral . M.size) ds
@@ -179,9 +176,8 @@ reassignRanks = go 1 1 . sortByPointsDesc
     go _ rank [c           ] = [withRank rank c]
     go i rank (c1 : c2 : cs) = withRank rank c1 : go (i + 1) nextRank (c2 : cs)
       where
-        nextRank
-            | contestantPoints c2 < contestantPoints c1 = i + 1
-            | otherwise = rank
+        nextRank | contestantPoints c2 < contestantPoints c1 = i + 1
+                 | otherwise = rank
 
     withRank r c = c { contestantRank = r }
 
@@ -298,7 +294,7 @@ calculateSeedOf x ys = calculateSeed (contestantRating x) (filter (/= x) ys)
 getEloWinProbability :: Float -> Float -> Float
 getEloWinProbability x y = 1 / (1 + 10 ** ((y - x) / 400))
 
--- | Like 'getEloWinProbability' but takes 'Int's instead of 'Float's. 
+-- | Like 'getEloWinProbability' but takes 'Int's instead of 'Float's.
 getEloWinProbability' :: Rating -> Rating -> Float
 getEloWinProbability' x = getEloWinProbability (fromIntegral x) . fromIntegral
 
