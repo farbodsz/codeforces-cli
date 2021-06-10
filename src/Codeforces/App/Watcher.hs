@@ -2,24 +2,24 @@
 
 module Codeforces.App.Watcher where
 
-import Codeforces.App.Format
-import Codeforces.App.Table
-import Codeforces.Error
-import Codeforces.Logging
+import           Codeforces.App.Format
+import           Codeforces.App.Table
+import           Codeforces.Error
+import           Codeforces.Logging
 
-import Control.Concurrent
-import Control.Exception (bracket)
-import Control.Monad.Extra (forM_)
-import Control.Monad.Trans.Class
-import Control.Monad.Trans.State
+import           Control.Concurrent
+import           Control.Exception              ( bracket )
+import           Control.Monad.Extra            ( forM_ )
+import           Control.Monad.Trans.Class
+import           Control.Monad.Trans.State
 
-import Data.Maybe (catMaybes)
-import qualified Data.Text as T
-import qualified Data.Text.IO as T
-import Data.Time
+import           Data.Maybe                     ( catMaybes )
+import qualified Data.Text                     as T
+import qualified Data.Text.IO                  as T
+import           Data.Time
 
-import System.Console.ANSI
-import System.IO
+import           System.Console.ANSI
+import           System.IO
 
 --------------------------------------------------------------------------------
 

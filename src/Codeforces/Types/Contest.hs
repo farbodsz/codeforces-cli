@@ -2,12 +2,12 @@
 
 module Codeforces.Types.Contest where
 
-import Codeforces.Types.Common
+import           Codeforces.Types.Common
 
-import Data.Aeson
-import Data.Text (Text)
-import Data.Time
-import Data.Time.Clock.POSIX
+import           Data.Aeson
+import           Data.Text                      ( Text )
+import           Data.Time
+import           Data.Time.Clock.POSIX
 
 --------------------------------------------------------------------------------
 
@@ -45,17 +45,15 @@ data Contest = Contest
 
 instance FromJSON Contest where
     parseJSON = withObject "Contest" $ \v ->
-        let
-            durationSeconds = (v .: "durationSeconds")
+        let durationSeconds = (v .: "durationSeconds")
             startTimePosix  = (v .:? "startTimeSeconds")
-        in
-            Contest
-            <$> (v .: "id")
-            <*> (v .: "name")
-            <*> (v .: "type")
-            <*> (v .: "phase")
-            <*> (v .: "frozen")
-            <*> (secondsToDiffTime <$> durationSeconds)
-            <*> (fmap posixSecondsToUTCTime <$> startTimePosix)
+        in  Contest
+                <$> (v .: "id")
+                <*> (v .: "name")
+                <*> (v .: "type")
+                <*> (v .: "phase")
+                <*> (v .: "frozen")
+                <*> (secondsToDiffTime <$> durationSeconds)
+                <*> (fmap posixSecondsToUTCTime <$> startTimePosix)
 
 --------------------------------------------------------------------------------

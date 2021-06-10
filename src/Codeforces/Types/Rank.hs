@@ -2,9 +2,9 @@
 
 module Codeforces.Types.Rank where
 
-import Codeforces.Types.Common
+import           Codeforces.Types.Common
 
-import Data.Text (Text)
+import           Data.Text                      ( Text )
 
 --------------------------------------------------------------------------------
 

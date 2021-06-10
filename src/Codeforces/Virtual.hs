@@ -8,15 +8,15 @@ module Codeforces.Virtual
     , calculateResult
     ) where
 
-import Codeforces.Types.Common
-import Codeforces.Types.RatingChange
-import Codeforces.Types.Standings
-import Codeforces.Virtual.RatingCalculator
-import Codeforces.Virtual.Types
+import           Codeforces.Types.Common
+import           Codeforces.Types.RatingChange
+import           Codeforces.Types.Standings
+import           Codeforces.Virtual.RatingCalculator
+import           Codeforces.Virtual.Types
 
-import Control.Applicative
+import           Control.Applicative
 
-import qualified Data.Map as M
+import qualified Data.Map                      as M
 
 --------------------------------------------------------------------------------
 
@@ -58,9 +58,8 @@ virtualRankings :: VirtualUser -> [RanklistRow] -> [RanklistRow]
 virtualRankings vu rrs = go rrs 1
   where
     go [] rank = [mkVirtualRow rank vu]
-    go (x : xs) _
-        | shouldInsert vu x = mkVirtualRow (rrRank x) vu : x : xs
-        | otherwise         = x : go xs (rrRank x + 1)
+    go (x : xs) _ | shouldInsert vu x = mkVirtualRow (rrRank x) vu : x : xs
+                  | otherwise         = x : go xs (rrRank x + 1)
 
     -- | Whether to insert the virtual user's row before the given row.
     shouldInsert VirtualUser {..} RanklistRow {..} =

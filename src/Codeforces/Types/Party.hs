@@ -2,12 +2,12 @@
 
 module Codeforces.Types.Party where
 
-import Codeforces.Types.Common
+import           Codeforces.Types.Common
 
-import Data.Aeson
-import Data.Text (Text)
-import Data.Time.Clock
-import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
+import           Data.Aeson
+import           Data.Text                      ( Text )
+import           Data.Time.Clock
+import           Data.Time.Clock.POSIX          ( posixSecondsToUTCTime )
 
 --------------------------------------------------------------------------------
 

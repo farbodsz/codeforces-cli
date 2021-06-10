@@ -5,15 +5,15 @@ module Codeforces.App.Commands.VirtualCmd
     ( virtualRating
     ) where
 
-import Codeforces.API
-import Codeforces.App.Format
-import Codeforces.Error
+import           Codeforces.API
+import           Codeforces.App.Format
+import           Codeforces.Error
 
-import Control.Monad.Trans.Class
-import Control.Monad.Trans.Except
+import           Control.Monad.Trans.Class
+import           Control.Monad.Trans.Except
 
-import qualified Data.Text as T
-import qualified Data.Text.IO as T
+import qualified Data.Text                     as T
+import qualified Data.Text.IO                  as T
 
 --------------------------------------------------------------------------------
 

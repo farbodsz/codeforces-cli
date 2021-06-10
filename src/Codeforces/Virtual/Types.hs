@@ -2,11 +2,11 @@
 
 module Codeforces.Virtual.Types where
 
-import Codeforces.Types.Common
-import Codeforces.Types.Party
+import           Codeforces.Types.Common
+import           Codeforces.Types.Party
 
-import Data.List
-import qualified Data.Map as M
+import           Data.List
+import qualified Data.Map                      as M
 
 --------------------------------------------------------------------------------
 
@@ -15,16 +15,15 @@ virtualHandle = Handle "VIRTUAL_USER"
 
 -- | A 'Party' representing the user's virtual participation.
 virtualParty :: Party
-virtualParty = Party
-    { partyContestId       = Nothing
-    , partyMembers         = [Member virtualHandle]
-    , partyParticipantType = Virtual
-    , partyTeamId          = Nothing
-    , partyTeamName        = Nothing
-    , partyIsGhost         = False
-    , partyRoom            = Nothing
-    , partyStartTime       = Nothing
-    }
+virtualParty = Party { partyContestId       = Nothing
+                     , partyMembers         = [Member virtualHandle]
+                     , partyParticipantType = Virtual
+                     , partyTeamId          = Nothing
+                     , partyTeamName        = Nothing
+                     , partyIsGhost         = False
+                     , partyRoom            = Nothing
+                     , partyStartTime       = Nothing
+                     }
 
 -- | Represents the virtual participation of the user in this contest.
 data VirtualUser = VirtualUser

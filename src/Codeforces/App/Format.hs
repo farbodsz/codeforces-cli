@@ -3,17 +3,17 @@
 -- | Utility functions for formatting data.
 module Codeforces.App.Format where
 
-import Codeforces.Types hiding (RankColor(..))
-import qualified Codeforces.Types.Rank as R
+import           Codeforces.Types        hiding ( RankColor(..) )
+import qualified Codeforces.Types.Rank         as R
 
-import Codeforces.App.Table
+import           Codeforces.App.Table
 
-import Data.Fixed
-import Data.Text (Text)
-import qualified Data.Text as T
-import Data.Time
+import           Data.Fixed
+import           Data.Text                      ( Text )
+import qualified Data.Text                     as T
+import           Data.Time
 
-import System.Console.ANSI
+import           System.Console.ANSI
 
 --------------------------------------------------------------------------------
 
@@ -44,10 +44,9 @@ convertRankColor R.Red    = Red
 
 -- | Like 'differenceCell' but returns a 'Text' rather than a 'Cell'.
 diffColored :: Int -> Text
-diffColored x
-    | x > 0     = colored Green $ "+" <> showText x
-    | x == 0    = " " <> showText x
-    | otherwise = colored Red $ showText x
+diffColored x | x > 0     = colored Green $ "+" <> showText x
+              | x == 0    = " " <> showText x
+              | otherwise = colored Red $ showText x
 
 indent :: Text
 indent = T.replicate 6 " "
@@ -71,11 +70,10 @@ fmtMemoryConsumed x = showText (x `div` 1000) <> " KB"
 fmtDiffTime :: NominalDiffTime -> Text
 fmtDiffTime diff = go (nominalDiffTimeToSeconds diff)
   where
-    go x
-        | x < 5     = "just now"
-        | x < 10    = "5 seconds ago"
-        | x < 60    = showText (x `div'` 10 :: Int) <> "0 seconds ago"
-        | otherwise = showText (x `div'` 60 :: Int) <> " minutes ago"
+    go x | x < 5     = "just now"
+         | x < 10    = "5 seconds ago"
+         | x < 60    = showText (x `div'` 10 :: Int) <> "0 seconds ago"
+         | otherwise = showText (x `div'` 60 :: Int) <> " minutes ago"
 
 --------------------------------------------------------------------------------
 
@@ -91,15 +89,14 @@ blankCell = plainCell ""
 ratingCell :: Rating -> Cell
 ratingCell x =
     let color = convertRankColor $ rankColor $ getRank x
-    in coloredCell color (showText x)
+    in  coloredCell color (showText x)
 
 -- | 'differenceCell' @diff@ colors a number red, white or green, depending on
 -- whether it's negative, 0, or positive.
 differenceCell :: Int -> Cell
-differenceCell x
-    | x > 0     = coloredCell Green $ "+" <> showText x
-    | x == 0    = plainCell $ " " <> showText x
-    | otherwise = coloredCell Red $ showText x
+differenceCell x | x > 0     = coloredCell Green $ "+" <> showText x
+                 | x == 0    = plainCell $ " " <> showText x
+                 | otherwise = coloredCell Red $ showText x
 
 -- | 'verdictCell' @testset passedTestCount points verdict@ returns a cell
 -- displaying the status of a submission, such as "Accepted" or "Wrong answer on
@@ -124,8 +121,7 @@ verdictCell testset passed points (Just v) = case v of
     InputPreparationCrashed -> plainCell $ verdictText v
     Rejected                -> plainCell $ verdictText v
     _ ->
-        let
-            currTest = passed + 1
+        let currTest = passed + 1
             clr      = if v == Testing then White else Blue
             text     = T.concat
                 [ verdictText v
@@ -134,6 +130,6 @@ verdictCell testset passed points (Just v) = case v of
                 , " "
                 , showText currTest
                 ]
-        in coloredCell clr text
+        in  coloredCell clr text
 
 --------------------------------------------------------------------------------

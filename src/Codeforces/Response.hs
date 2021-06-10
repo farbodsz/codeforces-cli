@@ -7,16 +7,16 @@ module Codeforces.Response
     , getAuthorizedData
     ) where
 
-import Codeforces.Config
-import Codeforces.Logging
+import           Codeforces.Config
+import           Codeforces.Logging
 
-import Control.Exception (try)
+import           Control.Exception              ( try )
 
-import Data.Aeson
-import Data.Maybe
+import           Data.Aeson
+import           Data.Maybe
 
-import Network.HTTP.Client
-import Network.HTTP.Simple
+import           Network.HTTP.Client
+import           Network.HTTP.Simple
 
 --------------------------------------------------------------------------------
 
@@ -121,7 +121,7 @@ getAuthorizedData cfg p q = generateRequestParams cfg p q >>= getData p
 -- | Takes a list of 'QueryItem's and returns those that have a @Just@ parameter
 -- value.
 --
--- By default, @Nothing@ items in 'Query' are parsed into "&a&b" format. The 
+-- By default, @Nothing@ items in 'Query' are parsed into "&a&b" format. The
 -- Codeforces API seems to be inconsistent with how it interprets requests like
 -- this. Most notably, the @contest.standings@ endpoint returns an empty list of
 -- ranklist rows when @Nothing@ is passed, but all ranklist rows when completely

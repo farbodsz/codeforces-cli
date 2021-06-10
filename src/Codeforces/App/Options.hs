@@ -10,9 +10,9 @@ module Codeforces.App.Options
     , parseCommands
     ) where
 
-import Codeforces.Types
+import           Codeforces.Types
 
-import Options.Applicative
+import           Options.Applicative
 
 --------------------------------------------------------------------------------
 
@@ -95,28 +95,23 @@ commandP =
                )
         <> command
                "friends"
-               (info
-                   friendsP
-                   (progDesc "List your friends (must be authenticated)")
+               (info friendsP
+                     (progDesc "List your friends (must be authenticated)")
                )
-        <> command
-               "open"
-               (info openP (progDesc "Open a contest in the browser"))
+        <> command "open"
+                   (info openP (progDesc "Open a contest in the browser"))
         <> command
                "problems"
                (info problemsP (progDesc "View and filter problem sets"))
-        <> command
-               "ratings"
-               (info ratingsP (progDesc "Rating changes of a user"))
-        <> command
-               "setup"
-               (info setupP (progDesc "Setup your configuration file"))
+        <> command "ratings"
+                   (info ratingsP (progDesc "Rating changes of a user"))
+        <> command "setup"
+                   (info setupP (progDesc "Setup your configuration file"))
         <> command
                "standings"
                (info standingsP (progDesc "Standings table of a contest"))
-        <> command
-               "status"
-               (info statusP (progDesc "Recent submissions of a user"))
+        <> command "status"
+                   (info statusP (progDesc "Recent submissions of a user"))
         <> command "user" (info userP (progDesc "Information about a user"))
         <> command
                "virtual"
