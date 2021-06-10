@@ -5,21 +5,21 @@
 --
 module Codeforces.Error where
 
-import qualified Codeforces.API as API
+import qualified Codeforces.Response as R
 import Codeforces.Logging
 
 --------------------------------------------------------------------------------
 
 -- | An error that may occur in this application.
 data CodeforcesError
-    = ResponseError API.ResponseError
+    = ResponseError R.ResponseError
     | StandingsEmpty
     | StandingsWithFriendsEmpty
     | VirtualNoResult
 
 -- | Returns a human-friendly error message with error details.
 showE :: CodeforcesError -> ErrorLog
-showE (ResponseError e) = API.responseErrorMsg e
+showE (ResponseError e) = R.responseErrorMsg e
 showE StandingsEmpty    = mkErrorLog "Standings empty."
 showE StandingsWithFriendsEmpty =
     mkErrorLog "Neither you nor your friends participated in this contest."
