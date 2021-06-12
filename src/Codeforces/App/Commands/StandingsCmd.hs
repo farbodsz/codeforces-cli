@@ -5,7 +5,7 @@ module Codeforces.App.Commands.StandingsCmd
     ( standingsList
     ) where
 
-import           Codeforces.API          hiding ( RankColor(..) )
+import           Codeforces.API
 import           Codeforces.App.Format
 import           Codeforces.App.Options
 import           Codeforces.App.Table

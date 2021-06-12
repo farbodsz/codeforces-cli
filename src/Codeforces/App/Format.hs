@@ -3,10 +3,8 @@
 -- | Utility functions for formatting data.
 module Codeforces.App.Format where
 
-import           Codeforces.Types        hiding ( RankColor(..) )
-import qualified Codeforces.Types.Rank         as R
-
 import           Codeforces.App.Table
+import           Codeforces.Types
 
 import           Data.Fixed
 import           Data.Text                      ( Text )
@@ -30,17 +28,17 @@ colored c s = T.concat
     , T.pack $ setSGRCode [Reset]
     ]
 
-rankColored :: R.RankColor -> Text -> Text
+rankColored :: RankColor -> Text -> Text
 rankColored = colored . convertRankColor
 
-convertRankColor :: R.RankColor -> Color
-convertRankColor R.Gray   = White
-convertRankColor R.Green  = Green
-convertRankColor R.Cyan   = Cyan
-convertRankColor R.Blue   = Blue
-convertRankColor R.Violet = Magenta
-convertRankColor R.Orange = Yellow
-convertRankColor R.Red    = Red
+convertRankColor :: RankColor -> Color
+convertRankColor RankGray   = White
+convertRankColor RankGreen  = Green
+convertRankColor RankCyan   = Cyan
+convertRankColor RankBlue   = Blue
+convertRankColor RankViolet = Magenta
+convertRankColor RankOrange = Yellow
+convertRankColor RankRed    = Red
 
 -- | Like 'differenceCell' but returns a 'Text' rather than a 'Cell'.
 diffColored :: Int -> Text
