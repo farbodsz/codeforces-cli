@@ -5,7 +5,7 @@
 
 Command line interface to interact with Codeforces.
 
-![demo](https://github.com/farbodsz/codeforces-cli/blob/master/docs/demo.gif?raw=true =700x550)
+<img src="https://github.com/farbodsz/codeforces-cli/blob/master/docs/demo.gif?raw=true" alt="demo-gif" width="700" height="550">
 
 ## Features
 
