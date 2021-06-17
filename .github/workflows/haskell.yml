@@ -1,0 +1,39 @@
+name: Haskell CI
+
+on:
+  push:
+    paths-ignore:
+      - "docs/**"
+  pull_request:
+    paths-ignore:
+      - "docs/**"
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        resolver:
+          - stack
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Install Haskell Stack
+        run: |
+          mkdir -p ~/.local/bin
+          cd ~/.local/bin
+          curl -sSL https://get.haskellstack.org/ | sh
+          export PATH=$HOME/.local/bin:$PATH
+
+      - name: Install GHC
+        run: |
+          export PATH=$HOME/.local/bin:$PATH
+          stack --stack-yaml=${{ matrix.resolver }}.yaml --install-ghc setup
+
+      - name: Build
+        run: |
+          export PATH=$HOME/.local/bin:$PATH
+          stack --stack-yaml=${{ matrix.resolver }}.yaml build --fast
+          stack --stack-yaml=${{ matrix.resolver }}.yaml test --fast
