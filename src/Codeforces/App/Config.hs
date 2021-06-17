@@ -37,9 +37,11 @@ emptyConfig = UserConfig { cfgHandle = Handle "", cfgKey = "", cfgSecret = "" }
 
 --------------------------------------------------------------------------------
 
--- | Check if the user has an existing configuration file, and if so check if
--- the user wants to overwrite it. If so 'createConfig' creates a new
--- configuration file, otherwise nothing happens.
+-- | Creates a configuration file with user prompts.
+--
+-- The user must decide whether to overwrite their configuration file if one
+-- already exists.
+--
 setupConfig :: IO ()
 setupConfig = do
     hSetBuffering stdin  LineBuffering

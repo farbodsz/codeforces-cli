@@ -32,7 +32,7 @@ instance FromJSON CodeforcesStatus where
 -- Each successful response from the API contains a "status" field, and either
 -- a "result" or "comment" when status is "OK" or "FAILED" respectively.
 --
--- These two possibilities are represented by 'ResponseOk' and 'ResponseFail'.
+-- These two possibilities are represented by @ResponseOk@ and @ResponseFail@.
 --
 data CodeforcesResponse a = ResponseFail String | ResponseOk a
     deriving Show
@@ -50,7 +50,7 @@ instance FromJSON a => FromJSON (CodeforcesResponse a) where
 -- from the Codeforces API.
 data ResponseError
     = ApiFail String
-    -- ^ Corresponds to a 'ResponseFail' from the Codeforces API with the fail
+    -- ^ Corresponds to a @ResponseFail@ from the Codeforces API with the fail
     -- comment.
     | JsonError JSONException
     -- ^ Wrapper around 'JSONException', used if the successful JSON response

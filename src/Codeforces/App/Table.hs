@@ -5,6 +5,7 @@ module Codeforces.App.Table
     , Row
     , Table
     , makeTable
+    , ColConfig
     ) where
 
 import           Data.Text                      ( Text )

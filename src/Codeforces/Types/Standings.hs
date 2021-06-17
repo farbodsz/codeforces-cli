@@ -82,7 +82,7 @@ instance FromJSON RanklistRow where
 --------------------------------------------------------------------------------
 
 -- | The standings returned by the API consists of 'Contest' details, the list
--- of 'Problems' and the requested portion of the standings list (a list of
+-- of 'Problem's and the requested portion of the standings list (a list of
 -- 'RanklistRow's).
 data Standings = Standings
     { standingsContest  :: Contest

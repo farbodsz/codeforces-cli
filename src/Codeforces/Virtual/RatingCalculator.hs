@@ -23,7 +23,7 @@ import           Data.Ord
 
 --------------------------------------------------------------------------------
 
--- | 'calculateNewRatingChanges' @previousRatings updatedRankings@ computes the
+-- | 'calculateContestResults' @previousRatings updatedRankings@ computes the
 -- contest results.
 calculateContestResults
     :: M.Map Handle Rating -> [RanklistRow] -> ContestResults
