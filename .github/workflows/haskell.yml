@@ -22,9 +22,7 @@ jobs:
 
       - name: Install Haskell Stack
         run: |
-          mkdir -p ~/.local/bin
-          cd ~/.local/bin
-          curl -sSL https://get.haskellstack.org/ | sh
+          which stack || curl -sSL https://get.haskellstack.org/ | sh
           export PATH=$HOME/.local/bin:$PATH
 
       - name: Install GHC
