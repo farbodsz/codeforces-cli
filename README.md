@@ -1,8 +1,11 @@
 # codeforces-cli
 
+[![Hackage](https://img.shields.io/hackage/v/codeforces-cli?color=green)](https://hackage.haskell.org/package/lens)
+[![Build Status](https://img.shields.io/github/workflow/status/farbodsz/codeforces-cli/Haskell%20CI)](https://github.com/farbodsz/codeforces-cli/actions?query=workflow%3AHaskell-CI)
+
 Command line interface to interact with Codeforces.
 
-![demo](https://github.com/farbodsz/codeforces-cli/blob/master/docs/demo.gif?raw=true)
+![demo](https://github.com/farbodsz/codeforces-cli/blob/master/docs/demo.gif?raw=true =700x550)
 
 ## Features
 
@@ -19,6 +22,13 @@ The pre-compiled binary file can be found
 
 Download it and place it in a directory in your `PATH`. For example,
 `~/.local/bin/cf`.
+
+Alternatively, you can get it through Haskell Stack, by installing the
+[`codeforces-cli`](https://hackage.haskell.org/package/codeforces-cli) package:
+
+```
+stack install codeforces-cli
+```
 
 ## Usage
 
@@ -46,3 +56,10 @@ Available commands:
   virtual                  Calculate your rating after a virtual contest, to
                            find what it would be if you competed live
 ```
+
+## Documentation
+
+A help page for the CLI is available via `cf --help`.
+
+The package's documentation is
+[available on Hackage](https://hackage.haskell.org/package/codeforces-cli).

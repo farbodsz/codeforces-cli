@@ -10,3 +10,6 @@ codeforces-cli.cabal
 
 # ghci config
 .ghci
+
+# Scripts for managing releases
+scripts/
