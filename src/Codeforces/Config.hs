@@ -81,8 +81,8 @@ data AuthQuery = AuthQuery
 -- @
 generateRequestParams :: UserConfig -> String -> Query -> IO Query
 generateRequestParams UserConfig {..} path query = do
-    (rand :: Int) <- randomRIO (100000, 999999)
-    time          <- getPOSIXTime
+    rand <- randomRIO (100000, 999999)
+    time <- getPOSIXTime
 
     let authQuery = AuthQuery { aqOriginalQuery = query
                               , aqMethodName    = path

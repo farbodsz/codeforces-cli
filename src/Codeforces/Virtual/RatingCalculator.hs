@@ -8,16 +8,16 @@ module Codeforces.Virtual.RatingCalculator
     ) where
 
 import           Codeforces.Types.Common
-import           Codeforces.Types.Party  hiding ( Contestant )
+import           Codeforces.Types.Party     hiding (Contestant)
 import           Codeforces.Types.Standings
 import           Codeforces.Virtual.Types
 
 import           Control.Monad
 import           Control.Monad.Trans.State
 
-import           Data.Functor                   ( (<&>) )
+import           Data.Functor               ((<&>))
 import           Data.List
-import qualified Data.Map                      as M
+import qualified Data.Map                   as M
 import           Data.Maybe
 import           Data.Ord
 
@@ -123,8 +123,7 @@ adjustTopDeltas cs ds = M.map (+ inc) ds
                                   (take zeroSumCount $ sortByRatingDesc cs)
 
     zeroSumCount = min (M.size ds) topCount
-    topCount     = 4 * (round' . sqrt . fromIntegral . M.size) ds
-    round'       = round :: Double -> Int
+    topCount     = 4 * (round @Double @Int . sqrt . fromIntegral . M.size) ds
 
 -- | Computes the rating delta for each party in this contest.
 --

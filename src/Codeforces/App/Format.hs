@@ -7,8 +7,8 @@ import           Codeforces.App.Table
 import           Codeforces.Types
 
 import           Data.Fixed
-import           Data.Text                      ( Text )
-import qualified Data.Text                     as T
+import           Data.Text            (Text)
+import qualified Data.Text            as T
 import           Data.Time
 
 import           System.Console.ANSI
@@ -70,8 +70,8 @@ fmtDiffTime diff = go (nominalDiffTimeToSeconds diff)
   where
     go x | x < 5     = "just now"
          | x < 10    = "5 seconds ago"
-         | x < 60    = showText (x `div'` 10 :: Int) <> "0 seconds ago"
-         | otherwise = showText (x `div'` 60 :: Int) <> " minutes ago"
+         | x < 60    = showText (div' @_ @Int x 10) <> "0 seconds ago"
+         | otherwise = showText (div' @_ @Int x 60) <> " minutes ago"
 
 --------------------------------------------------------------------------------
 

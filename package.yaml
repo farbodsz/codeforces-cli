@@ -38,6 +38,7 @@ default-extensions:
   - RecordWildCards
   - ScopedTypeVariables
   - TupleSections
+  - TypeApplications
 
 library:
   source-dirs: src
